@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Eczar:wght@400..800&display=swap');
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -47,4 +49,25 @@ a {
   .imgDark {
     display: unset;
   }
+}
+
+.eczar-regular {
+  font-family: "Eczar", serif;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.eczar-medium {
+  font-family: "Eczar", serif;
+  font-optical-sizing: auto;
+  font-weight: 500;
+  font-style: normal;
+}
+
+.eczar-semibold {
+  font-family: "Eczar", serif;
+  font-optical-sizing: auto;
+  font-weight: 600;
+  font-style: normal;
 }

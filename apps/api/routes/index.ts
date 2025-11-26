@@ -8,7 +8,7 @@ const router = Router();
 
 router.use("/user", userRouter);
 
-router.use(authMiddleware);
+// router.use(authMiddleware);
 router.use("/chat", chatRouter);
 router.use("/message", messageRouter);
 

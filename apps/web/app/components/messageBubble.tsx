@@ -1,3 +1,5 @@
+import ReactMarkdown from "react-markdown";
+
 export type Message = {
     id: number; 
     content: string;
@@ -6,10 +8,21 @@ export type Message = {
 
 export const MessageBubble = ({ message, loading } : { message: Message, loading: boolean }) => {
     return (
-        <div className={`${message.role == `user` ? `flex justify-end items-center` : `flex justify-start`} mt-2`}>
-            <div className={`${message.role == "user" ? `bg-amber-100 px-3 py-2 rounded` : ``}`}>
-                {message.content}
-            </div>
-        </div>    
+        <div className="mt-2">
+            {message.role == `user` && (
+                <div className={`flex justify-end items-center`}>
+                    <div className={`${message.role == "user" ? `bg-amber-100 px-3 py-2 rounded` : ``}`}>
+                        {message.content}
+                    </div>
+                </div>
+            )}  
+            {message.role == `assistant` && (
+                <div className={`flex justify-start`}>
+                    <div className="prose">
+                        <ReactMarkdown>{message.content}</ReactMarkdown>
+                    </div>
+                </div>
+            )}  
+        </div>
     );
 }

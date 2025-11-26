@@ -49,6 +49,7 @@ router.post("/", async (req, res) => {
     res.setHeader('Connection', 'keep-alive');
 
     for await (const chunk of response) {
+        // console.log(chunk);
         console.log(chunk.text);
         res.write(chunk.text);
     }

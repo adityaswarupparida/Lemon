@@ -1,7 +1,9 @@
 "use client"
 import { useContext, useEffect, useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
 import { Message, MessageBubble } from "./messageBubble";
 import { ChatContext } from "../providers/chatContext";
+import { GiCutLemon } from "react-icons/gi";
 const BACKEND_URL = "http://localhost:3002";
 
 export const ChatInterface = () => {
@@ -92,8 +94,9 @@ export const ChatInterface = () => {
                 <div className="text-black"></div>
                 <button className="bg-yellow-400 text-black w-20 h-4/5 py-2 px-4 rounded-lg cursor-pointer hover:bg-amber-300">Share</button>
             </div>
-            <div className="bg-white flex flex-col flex-1 px-40 overflow-hidden">
-                <div className="flex-1 overflow-y-auto text-black" ref={containerRef}>
+            <div className="bg-white flex flex-col flex-1 overflow-hidden">
+                <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white
+                    [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-amber-200 px-40 text-black" ref={containerRef}>
                     {messages.map((msg, index) => (
                         <div key={`${index}`}>
                             <MessageBubble key={msg.id} message={msg} loading={false} />
@@ -101,18 +104,25 @@ export const ChatInterface = () => {
                     ))}
 
                     {output !== "" && (
-                        <div className="flex justify-start mt-2 bg-amber-100">
-                            {output}
+                        <div className="flex flex-col items-start mt-2 bg-amber-100">
+                            <div className="prose">
+                                <ReactMarkdown>{output}</ReactMarkdown>
+                            </div>
+                            <div className="animate-bounce mt-1">
+                                <GiCutLemon fill="oklch(85.2% 0.199 91.936)" size={28}/>
+                            </div>
                         </div>
                     )}
                 </div>
-                <div className="h-14 flex items-center gap-2 mb-2 px-1 bg-stone-100 rounded-3xl">
-                    <input type="text" placeholder="Ask anything" className="bg-white h-4/5 py-2 px-3 flex-1 text-black text-lg rounded-3xl focus:outline-amber-300 focus:outline-solid"
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                    ></input>
-                    <button className="bg-yellow-400 text-black w-20 h-4/5 py-2 px-4 rounded-3xl cursor-pointer hover:bg-amber-300"
-                        onClick={handleClick}>Send</button>
+                <div className="px-40 my-3 rounded-3xl">
+                    <div className="h-14 flex items-center px-1 gap-2 bg-stone-100 rounded-3xl">
+                        <input type="text" placeholder="Ask anything" className="bg-white h-4/5 py-1 px-3 flex-1 text-black text-lg rounded-3xl focus:outline-amber-300 focus:outline-solid"
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                        ></input>
+                        <button className="bg-yellow-400 text-black w-20 h-4/5 py-2 px-4 rounded-3xl cursor-pointer hover:bg-amber-300"
+                            onClick={handleClick}>Send</button>
+                    </div>
                 </div>
             </div>
         </div>

@@ -4,6 +4,9 @@ import ReactMarkdown from "react-markdown";
 import { Message, MessageBubble } from "./messageBubble";
 import { ChatContext } from "../providers/chatContext";
 import { GiCutLemon } from "react-icons/gi";
+import { SiLemonsqueezy } from "react-icons/si";
+import { LemonAnimation } from "./ui/lemonAnimation";
+import { useTypeOutput } from "../hooks/useTypeOutput";
 const BACKEND_URL = "http://localhost:3002";
 
 export const ChatInterface = () => {
@@ -19,7 +22,10 @@ export const ChatInterface = () => {
     ]);
     const [input, setInput] = useState('');
     const [output, setOutput] = useState('');
+    const [loading, setLoading] = useState(false);
     const containerRef = useRef<HTMLDivElement | null>(null);
+    const outputRef = useRef("");
+    const { typedOutput } = useTypeOutput(output);
 
     const handleClick = async () => {
         console.log(input)
@@ -34,6 +40,7 @@ export const ChatInterface = () => {
             }
         ]);
         setInput("");
+        setLoading(true);
 
 
         const response = await fetch(`${BACKEND_URL}/api/message`, {
@@ -59,7 +66,9 @@ export const ChatInterface = () => {
         const decoder = new TextDecoder();
         let done = false;
         let fullAssistantMessage = "";
+        outputRef.current = "";
         setOutput("")
+        setLoading(false);
 
         while (!done) {
             console.log("entered");
@@ -68,9 +77,11 @@ export const ChatInterface = () => {
             const chunk = decoder.decode(value);
             fullAssistantMessage += chunk;
             console.log('Inside loop', output);
-            setOutput((prev) => prev + chunk); // Append chunk to output
+            // setOutput((prev) => prev + chunk); // Append chunk to output
+            outputRef.current += chunk;
+            setOutput(outputRef.current);  // triggers typing hook smoothly
         }
-        // console.log('Not reaching here')
+
         console.log('fullAssistantMessage' + fullAssistantMessage);
         setMessages((prev) => [
             ...prev,
@@ -103,16 +114,28 @@ export const ChatInterface = () => {
                         </div>
                     ))}
 
+                    {loading && (
+                        <div className="flex flex-col items-start mt-2">
+                            <GiCutLemon
+                                className={`w-12 h-12 transition-all duration-300 text-amber-300 animate-squeeze`}
+                            />
+                        </div>
+                    )}
+
                     {output !== "" && (
-                        <div className="flex flex-col items-start mt-2 bg-amber-100">
-                            <div className="prose">
-                                <ReactMarkdown>{output}</ReactMarkdown>
+                        <div className="flex flex-col items-start mt-2">
+                            {/* Need Typewriter effect here */}
+                            <div className="prose bg-amber-100 animate-typing"> 
+                                <ReactMarkdown>{typedOutput}</ReactMarkdown>
                             </div>
-                            <div className="animate-bounce mt-1">
-                                <GiCutLemon fill="oklch(85.2% 0.199 91.936)" size={28}/>
+                            <div className="flex items-center mt-1">
+                                <LemonAnimation />
                             </div>
                         </div>
                     )}
+                    {/* <div className="flex items-center mt-1">
+                        <LemonAnimation />
+                    </div> */}
                 </div>
                 <div className="px-40 my-3 rounded-3xl">
                     <div className="h-14 flex items-center px-1 gap-2 bg-stone-100 rounded-3xl">

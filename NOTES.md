@@ -1,7 +1,7 @@
-Connect end to end chat and message
+Connect end to end chat and message - Partially done
 Create a new chat from UI
 Send message from new chat
-Stream character wise (with Lemon logo)
+Stream character wise (with Lemon logo) - Done
 Once done make auth also allow without auth
 Create an landing page from new chat
 Complete Search functionality

@@ -59,13 +59,22 @@
 }
 
 @keyframes typing {
-          from {
-            width: 0;
-          }
-          to {
-            width: 100%;
-          }
-        }
+    0% {
+      width: 0%;
+      visibility: "hidden";
+    }
+    100% {
+      width: 104%;
+    }
+}
+@keyframes blink {
+    50% {
+      borderColor: "transparent";
+    }
+    100% {
+      borderColor: "black";
+    }
+}
 
   --animate-wiggle: wiggle 1s ease-in-out infinite;
   --animate-lemon-bounce: lemon-bounce 0.9s ease-in-out infinite;
@@ -76,5 +85,7 @@
   --animate-drop-1: drop 0.8s ease-in infinite 0s;
   --animate-drop-2: drop 0.8s ease-in infinite 0.2s;
   --animate-drop-3: drop 0.8s ease-in infinite 0.4s;
-  --animate-typing: typing 2s steps(40, end) infinite;
+  /* --animate-typing: typing 2s steps(40, end) infinite; */
+  --animate-typing: typing 2s steps(20) infinite alternate, blink .7s infinite;
+  /* --animate-typing: typing 2s steps(20, end) forwards, blink .7s infinite; */
 }

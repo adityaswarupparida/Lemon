@@ -9,7 +9,7 @@ type ChatContextType = {
 export const ChatContext = createContext<ChatContextType | null>(null);
 
 export const ChatContextProvider = ({ children }: { children: ReactNode }) => {
-    const [chat, setChat] = useState<string>("edccf30d-8932-4946-af60-8002fba8fb93");
+    const [chat, setChat] = useState<string>("");
 
     return (
         <ChatContext.Provider value={{chat, setChat}}>

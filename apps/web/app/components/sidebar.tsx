@@ -3,14 +3,11 @@ import { GiCutLemon } from "react-icons/gi";
 import { AiOutlineWechat } from "react-icons/ai";
 import { GoSearch } from "react-icons/go";
 import { IoIosArrowDown } from "react-icons/io";
-import { useContext, useEffect, useState } from "react";
-import { getChats } from "../services/chat";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { createNewChat, getChats } from "../services/chat";
 import { ChatContext } from "../providers/chatContext";
 
-export const Sidebar = () => {
-    const ctx = useContext(ChatContext);
-    if (!ctx) return null;
-    const { chat } = ctx;
+export const Sidebar = ({ setChat }: { setChat: Dispatch<SetStateAction<string>> }) => {
     const [chats, setChats] = useState<any[]>([]);
 
     useEffect(() => {
@@ -21,6 +18,12 @@ export const Sidebar = () => {
         })()
     }, [])
 
+    const handleNewChat = async () => {
+        const chatId = await createNewChat();
+        setChats((prev) => [{ id: chatId, title: "Untitled" }, ...prev]);
+        setChat(chatId);
+    }
+
     return (
         <div className="w-64 bg-stone-100 hidden sm:block h-full overflow-y-hidden">
             <div className="flex items-center justify-start gap-2 pl-2 pb-1">
@@ -28,10 +31,12 @@ export const Sidebar = () => {
                 <span className="text-3xl pt-2 handlee-regular text-black">Lemon</span>
             </div>
             <div className="mt-3 flex flex-col">
-                <button className="flex items-center justify-start gap-2 pl-5 hover:bg-stone-200 cursor-pointer">
+                <div className="flex items-center justify-start gap-2 pl-5 hover:bg-stone-200 cursor-pointer"
+                    onClick={handleNewChat}
+                >
                     <AiOutlineWechat fill="oklch(85.2% 0.199 91.936)" size={30} />
                     <span className="text-lg pt-2 handlee-regular text-black">New chat</span>
-                </button>
+                </div>
                 <div className="flex items-center justify-start gap-2 pl-5 hover:bg-stone-200 cursor-pointer">
                     <GoSearch fill="oklch(85.2% 0.199 91.936)" size={30} />
                     <span className="text-lg pt-2 handlee-regular text-black">Search chats</span>
@@ -44,7 +49,7 @@ export const Sidebar = () => {
                 </button>
                 {chats && <div>
                     {chats.map((c, ind) => (
-                        <div key={`${ind}`} className="text-black handlee-regular pl-5 pt-2 hover:bg-stone-200 cursor-pointer">
+                        <div key={`${ind}`} onClick={() => setChat(c.id)} className="text-black handlee-regular pl-5 pt-2 hover:bg-stone-200 cursor-pointer">
                             {c.title}
                         </div>
                     ))}

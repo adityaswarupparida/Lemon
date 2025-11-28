@@ -4,22 +4,18 @@ import ReactMarkdown from "react-markdown";
 import { Message, MessageBubble } from "./messageBubble";
 import { ChatContext } from "../providers/chatContext";
 import { GiCutLemon } from "react-icons/gi";
-import { SiLemonsqueezy } from "react-icons/si";
 import { LemonAnimation } from "./ui/lemonAnimation";
 import { useTypeOutput } from "../hooks/useTypeOutput";
+import { getMessages } from "../services/message";
+import { updateChatTitle } from "../services/chat";
 const BACKEND_URL = "http://localhost:3002";
 
-export const ChatInterface = () => {
-    const ctx = useContext(ChatContext);
-    if (!ctx) return null;
-    const { chat } = ctx;
+export const ChatInterface = ({ chat }: { chat: string }) => {
+    // const ctx = useContext(ChatContext);
+    // if (!ctx) return null;
+    // const { chat } = ctx;
 
-    const [messages, setMessages] = useState<Message[]>([
-        { content: "Hello. who are you?", role: "user", id: 1},
-        { content: "I'm Lemon, an AI assistant created by Lemonista. It's a pleasure to meet you!", role: "assistant", id: 2},
-        { content: "Hello. who are you?", role: "user", id: 3},
-        { content: "I'm Lemon, an AI assistant created by Lemonista. It's a pleasure to meet you!", role: "assistant", id: 4},
-    ]);
+    const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
     const [output, setOutput] = useState('');
     const [loading, setLoading] = useState(false);
@@ -28,8 +24,12 @@ export const ChatInterface = () => {
     const { typedOutput } = useTypeOutput(output);
 
     const handleClick = async () => {
-        console.log(input)
+        console.log(input, messages.length)
         const request = input;
+
+        if (messages.length == 0) {
+            updateChatTitle(chat, request);
+        }
         // Add user message
         setMessages((prev) => [
             ...prev,
@@ -96,6 +96,20 @@ export const ChatInterface = () => {
     }
 
     useEffect(() => {
+        (async () => {
+            let msgs = await getMessages(chat);
+            console.log(`use effect in Chat Interface`, msgs)
+
+            msgs = msgs.map((msg: any) => ({ 
+                id: msg.id, 
+                content: msg.content,
+                role: msg.role.toLowerCase() 
+            }))
+            setMessages(msgs);
+        })()
+    }, [chat]);
+
+    useEffect(() => {
         containerRef.current?.scrollTo(0, containerRef.current.scrollHeight);
     }, [messages, output]);
 
@@ -125,7 +139,7 @@ export const ChatInterface = () => {
                     {output !== "" && (
                         <div className="flex flex-col items-start mt-2">
                             {/* Need Typewriter effect here */}
-                            <div className="prose bg-amber-100 animate-typing"> 
+                            <div className="prose bg-amber-100"> 
                                 <ReactMarkdown>{typedOutput}</ReactMarkdown>
                             </div>
                             <div className="flex items-center mt-1">
@@ -142,6 +156,7 @@ export const ChatInterface = () => {
                         <input type="text" placeholder="Ask anything" className="bg-white h-4/5 py-1 px-3 flex-1 text-black text-lg rounded-3xl focus:outline-amber-300 focus:outline-solid"
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
+                            onKeyDown={(e) => e.key === "Enter" && handleClick()}
                         ></input>
                         <button className="bg-yellow-400 text-black w-20 h-4/5 py-2 px-4 rounded-3xl cursor-pointer hover:bg-amber-300"
                             onClick={handleClick}>Send</button>

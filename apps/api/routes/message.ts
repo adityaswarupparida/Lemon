@@ -6,8 +6,8 @@ import { prompt } from "../systemPrompt";
 const router = Router();
 const ai = new GoogleGenAI({apiKey: process.env.GEMINI_API_KEY});
 
-router.get("/", async (req, res) => {
-    const { chatId } = req.body;
+router.get("/:chatid", async (req, res) => {
+    const chatId = req.params.chatid;
 
     const messages = await prisma.message.findMany({
         where: {
@@ -47,14 +47,24 @@ router.post("/", async (req, res) => {
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
+    let answer = "";
 
     for await (const chunk of response) {
         // console.log(chunk);
         console.log(chunk.text);
+        answer += (chunk.text);
         res.write(chunk.text);
     }
     // console.log(response.text);
     res.end();
+
+    await prisma.message.create({
+        data: {
+            chatId,
+            role: Role.Assistant,
+            content: answer
+        }
+    });
 
     // res.status(201).json({
     //     message: message.id

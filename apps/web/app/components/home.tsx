@@ -21,7 +21,7 @@ export const Home = () => {
                         n
                     </div> 
                 </div>
-                <div className="mt-16 text-4xl kedebideri-medium">
+                <div className="mt-16 text-5xl kedebideri-medium">
                     Your Everyday AI Assistant. Built for Everyone.
                 </div>
                 <div className="flex flex-col text-xl gap-1 items-center mt-16">
@@ -50,8 +50,15 @@ export const Home = () => {
                     </div>
                 </div>
             </div>
-            <div className="h-10">
-                Squeezed with love by Lemonista 🍋❤️ · 2025
+            <div className="h-10 flex items-center gap-1">
+                Squeezed with love by Lemonista 
+                <div className="flex items-center">
+                    <GiCutLemon
+                        className={`w-4 h-4 mb-1 text-amber-300`}
+                    />
+                    ❤️ 
+                </div>
+                · {new Date().getFullYear()}
             </div>
         </div>
     );

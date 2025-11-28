@@ -1,19 +1,19 @@
 "use client"
-import { useContext, useEffect, useRef, useState } from "react";
+import { Dispatch, SetStateAction, useContext, useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { Message, MessageBubble } from "./messageBubble";
-import { ChatContext } from "../providers/chatContext";
 import { GiCutLemon } from "react-icons/gi";
 import { LemonAnimation } from "./ui/lemonAnimation";
 import { useTypeOutput } from "../hooks/useTypeOutput";
 import { getMessages } from "../services/message";
 import { updateChatTitle } from "../services/chat";
+import { CiLogout } from "react-icons/ci";
 const BACKEND_URL = "http://localhost:3002";
 
-export const ChatInterface = ({ chat }: { chat: string }) => {
-    // const ctx = useContext(ChatContext);
-    // if (!ctx) return null;
-    // const { chat } = ctx;
+export const ChatInterface = ({ chat, setChat }: { 
+    chat: string, setChat: 
+    Dispatch<SetStateAction<string>> 
+}) => {
 
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
@@ -24,7 +24,7 @@ export const ChatInterface = ({ chat }: { chat: string }) => {
     const { typedOutput } = useTypeOutput(output);
 
     const handleClick = async () => {
-        console.log(input, messages.length)
+        // console.log(input, messages.length)
         const request = input;
 
         if (messages.length == 0) {
@@ -71,18 +71,18 @@ export const ChatInterface = ({ chat }: { chat: string }) => {
         setLoading(false);
 
         while (!done) {
-            console.log("entered");
+            // console.log("entered");
             const { value, done: readerDone } = await reader.read();
             done = readerDone;
             const chunk = decoder.decode(value);
             fullAssistantMessage += chunk;
-            console.log('Inside loop', output);
+            // console.log('Inside loop', output);
             // setOutput((prev) => prev + chunk); // Append chunk to output
             outputRef.current += chunk;
             setOutput(outputRef.current);  // triggers typing hook smoothly
         }
 
-        console.log('fullAssistantMessage' + fullAssistantMessage);
+        // console.log('fullAssistantMessage' + fullAssistantMessage);
         setMessages((prev) => [
             ...prev,
             { 
@@ -98,7 +98,7 @@ export const ChatInterface = ({ chat }: { chat: string }) => {
     useEffect(() => {
         (async () => {
             let msgs = await getMessages(chat);
-            console.log(`use effect in Chat Interface`, msgs)
+            // console.log(`use effect in Chat Interface`, msgs)
 
             msgs = msgs.map((msg: any) => ({ 
                 id: msg.id, 
@@ -115,9 +115,14 @@ export const ChatInterface = ({ chat }: { chat: string }) => {
 
     return (
         <div className="flex flex-col flex-1 h-full handlee-regular selection:bg-yellow-100">
-            <div className="h-12 max-w-full flex justify-between items-center px-2 bg-stone-100">
+            <div className="h-12 max-w-full flex justify-between items-center px-2 bg-stone-50">
                 <div className="text-black"></div>
-                <button className="bg-yellow-400 text-black w-20 h-4/5 py-2 px-4 rounded-lg cursor-pointer hover:bg-amber-300">Share</button>
+                <div className="flex items-center gap-3">
+                    <CiLogout className="text-black hover:text-amber-400 text-3xl hover:cursor-pointer"
+                        onClick={() => setChat("")}
+                    />
+                    <button className="bg-yellow-400 text-black w-20 h-4/5 py-2 px-4 rounded-lg cursor-pointer hover:bg-amber-300">Share</button>
+                </div>
             </div>
             <div className="bg-white flex flex-col flex-1 overflow-hidden">
                 <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white
@@ -138,8 +143,7 @@ export const ChatInterface = ({ chat }: { chat: string }) => {
 
                     {output !== "" && (
                         <div className="flex flex-col items-start mt-2">
-                            {/* Need Typewriter effect here */}
-                            <div className="prose bg-amber-100"> 
+                            <div className="prose"> 
                                 <ReactMarkdown>{typedOutput}</ReactMarkdown>
                             </div>
                             <div className="flex items-center mt-1">

@@ -3,7 +3,7 @@ import { GiCutLemon } from "react-icons/gi";
 export const Home = () => {
     
     return (
-        <div className="flex flex-col justify-between items-center bg-yellow-50 w-full text-black handlee-regular">
+        <div className="flex flex-col justify-between items-center bg-yellow-50 w-full text-black handlee-regular border-l-2 border-l-amber-100">
             <div className="flex flex-col justify-center items-center w-full grow">
                 <div className="flex flex-col justify-center items-center text-9xl w-full">
                     <div>
@@ -21,7 +21,7 @@ export const Home = () => {
                         n
                     </div> 
                 </div>
-                <div className="mt-16 text-4xl">
+                <div className="mt-16 text-4xl kedebideri-medium">
                     Your Everyday AI Assistant. Built for Everyone.
                 </div>
                 <div className="flex flex-col text-xl gap-1 items-center mt-16">

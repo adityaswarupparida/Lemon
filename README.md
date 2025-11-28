@@ -1,5 +1,6 @@
 # Demo
-https://github.com/user-attachments/assets/25688051-1972-4ae9-85c1-9784825c481a
+<video src="https://github.com/user-attachments/assets/25688051-1972-4ae9-85c1-9784825c481a" muted controls autoplay loop></video>
+
 
 # Turborepo starter
 

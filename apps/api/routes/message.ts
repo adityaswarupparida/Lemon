@@ -21,12 +21,8 @@ router.get("/:chatid", async (req, res) => {
 });
 
 router.post("/", async (req, res) => {
-    console.log(req.body);
     const { chatId, content, role } = req.body;
-    // const chatId = "edccf30d-8932-4946-af60-8002fba8fb93";
-    // const content = "Hi, who you are ?";
-    // const role = "user";
-    console.log(chatId, content, role);
+    // console.log(chatId, content, role);
 
     const message = await prisma.message.create({
         data: {

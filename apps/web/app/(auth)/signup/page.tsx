@@ -1,9 +1,12 @@
 "use client";
-import { GiCutLemon } from "react-icons/gi";
 import Link from 'next/link'
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { GiCutLemon } from "react-icons/gi";
+import { Toaster, toast } from 'sonner';
+import { signUp } from '../../services/user';
 
-type SignUpInput = {
+export type SignUpInput = {
     firstName: string;
     lastName: string;
     email: string;
@@ -12,6 +15,7 @@ type SignUpInput = {
 }
 
 export default function SignUp() {
+    const router = useRouter();
     const [loading, setLoading] = useState<boolean>(false);
     const [input, setInput] = useState<SignUpInput>({
         firstName: "",
@@ -37,9 +41,27 @@ export default function SignUp() {
         setLoading(true);
 
         // make api call
+        (async () => {
+            const { error, token } = await signUp(input);
+            if (error) {
+                toast.error("Error while signing up: "+error);
+                return;
+            }
+            localStorage.setItem("auth_token", token);
+            toast.success("You are signed up.");
+        })()
+
         setTimeout(() => {
+            setInput({
+                firstName: "",
+                lastName: "",
+                email: "",
+                password: "",
+                confirmPassword: ""
+            });
             setLoading(false);
-        }, 3000);
+            router.push("/");
+        }, 1000);
     }
 
     return (
@@ -94,6 +116,7 @@ export default function SignUp() {
                         <button className="bg-amber-300 w-full p-2 rounded relative hover:bg-yellow-400 cursor-pointer disabled:bg-amber-300/50 disabled:cursor-not-allowed"
                             disabled={!isValid || loading}
                             onClick={handleClick}
+                            onKeyDown={(e) => e.key === "Enter" && handleClick()}
                         >
                             {loading && <div className="flex justify-center py-1">
                                 <svg className="w-5 h-5 text-white animate-spin" fill="none"
@@ -113,6 +136,10 @@ export default function SignUp() {
                     </div>
                 </div>
             </div>
+            <Toaster 
+                position="top-right"
+                richColors 
+            />
         </div>
     );
 }

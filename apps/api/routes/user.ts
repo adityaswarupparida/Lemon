@@ -12,12 +12,25 @@ router.post("/signup", async (req, res) => {
 
     if (!parsedBody.success || !parsedBody.data) {
         res.status(400).json({
-            error: parsedBody.error
+            message: parsedBody.error
         })
         return
     }
 
-    try {  
+    try { 
+        const isUserPresent = await prisma.user.findFirst({
+            where: {
+                email: parsedBody.data.email
+            }
+        })
+
+        if (isUserPresent) {
+            res.status(400).json({
+                message: "User already exists. Please sign in instead."
+            })
+            return
+        }
+
         let hashedPassword = await bcrypt.hash(parsedBody.data.password, saltRounds);
         const user = await prisma.user.create({
             data: {
@@ -29,8 +42,13 @@ router.post("/signup", async (req, res) => {
         });
         console.log(user)
 
+        const token = jwt.sign({
+            sub: user.id
+        }, jwtSecret);
+
         res.json({
-            user: user.id
+            user: user.id,
+            token
         })
     } catch (e) {
         res.status(409).json({
@@ -58,7 +76,7 @@ router.post("/signin", async (req, res) => {
         const matched = await bcrypt.compare(password, user.password);
         if (!matched) {
             res.status(400).json({
-                error: "Bad Request: Incorrect Password"
+                message: "Bad Request: Incorrect Password"
             });
             return;
         }

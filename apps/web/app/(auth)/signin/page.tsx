@@ -1,14 +1,18 @@
 "use client"
-import { GiCutLemon } from "react-icons/gi";
 import Link from 'next/link'
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { GiCutLemon } from "react-icons/gi";
+import { Toaster, toast } from 'sonner';
+import { signIn } from '../../services/user';
 
-type SignInInput = {
+export type SignInInput = {
     email: string;
     password: string;
 }
 
 export default function SignIn() {
+    const router = useRouter();
     const [loading, setLoading] = useState<boolean>(false);
     const [input, setInput] = useState<SignInInput>({
         email: "",
@@ -25,9 +29,24 @@ export default function SignIn() {
         setLoading(true);
 
         // make api call
+        (async () => {
+            const { error, token } = await signIn(input);
+            if (error) {
+                toast.error("Error while signing in: "+error);
+                return;
+            }
+            localStorage.setItem("auth_token", token);
+            toast.success("You are signed in.");
+        })()
+
         setTimeout(() => {
+            setInput({
+                email: "",
+                password: "",
+            });
             setLoading(false);
-        }, 3000);
+            router.push("/");
+        }, 1000);
     }
 
     return (
@@ -49,7 +68,8 @@ export default function SignIn() {
                         <input type="text" placeholder="Email" required
                             className="p-2 flex-1 border border-stone-100 focus:outline-solid focus:outline-2 rounded outline-amber-200"
                             value={input.email}
-                            onChange={(e) => handleChange("email", e.target.value)} 
+                            onChange={(e) => handleChange("email", e.target.value)}
+                            onKeyDown={(e) => isValid && e.key === "Enter" && handleClick()} 
                         ></input>
                     </div>
                     <div className="flex mb-2">
@@ -57,6 +77,7 @@ export default function SignIn() {
                             className="p-2 flex-1 border border-stone-100 focus:outline-solid focus:outline-2 rounded outline-amber-200"
                             value={input.password}
                             onChange={(e) => handleChange("password", e.target.value)}
+                            onKeyDown={(e) => isValid && e.key === "Enter" && handleClick()}
                         ></input>
                     </div>
                     <div className="mb-2 flex flex-col justify-center items-center gap-1 w-full">
@@ -82,6 +103,10 @@ export default function SignIn() {
                     </div>
                 </div>
             </div>
+            <Toaster 
+                position="top-right"
+                richColors 
+            />
         </div>
     );
 }

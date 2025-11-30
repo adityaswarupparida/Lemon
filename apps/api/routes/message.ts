@@ -22,9 +22,19 @@ router.get("/:chatid", async (req, res) => {
 
 router.post("/", async (req, res) => {
     const { chatId, content, role } = req.body;
-    // console.log(chatId, content, role);
 
-    const message = await prisma.message.create({
+    const messages = await prisma.message.findMany({
+        where: {
+            chatId
+        },
+        select: {
+            content: true
+        }
+    });
+    let contents = messages.map((msg) => msg.content);
+    contents.push(content) // latest request from user
+
+    await prisma.message.create({
         data: {
             chatId,
             content,
@@ -34,7 +44,7 @@ router.post("/", async (req, res) => {
 
     const response = await ai.models.generateContentStream({
         model: "gemini-2.5-flash",
-        contents: content,
+        contents: contents,
         config: {
             systemInstruction: prompt
         }
@@ -47,11 +57,12 @@ router.post("/", async (req, res) => {
 
     for await (const chunk of response) {
         // console.log(chunk);
+        if (chunk.text == undefined)
+            continue;
         console.log(chunk.text);
         answer += (chunk.text);
         res.write(chunk.text);
     }
-    // console.log(response.text);
     res.end();
 
     await prisma.message.create({

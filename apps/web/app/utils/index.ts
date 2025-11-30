@@ -5,5 +5,5 @@ export const concatenate = (word1: string | undefined, word2: string | undefined
 
 export const getInitials = (word1: string | undefined, word2: string | undefined) => {
     if (!word1 || !word2) return "";
-    return concatenate(word1[0], word2[0], "");
+    return concatenate(word1[0].toUpperCase(), word2[0].toUpperCase(), "");
 }

@@ -99,7 +99,7 @@ export const Sidebar = ({ setChat }: { setChat: Dispatch<SetStateAction<string>>
                         <div className="absolute text-white">{getInitials(user?.firstName, user?.lastName)}</div>
                     </div>
                     <div className="truncate pl-2 handlee-regular flex flex-col items-start">
-                        <div className="text-md">{concatenate(user?.firstName, user?.lastName, "")}</div>
+                        <div className="text-md">{concatenate(user?.firstName, user?.lastName, " ")}</div>
                         <div className="text-xs">{user?.email}</div>
                     </div>
                 </div>

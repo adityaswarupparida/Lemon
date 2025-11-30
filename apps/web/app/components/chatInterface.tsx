@@ -1,5 +1,5 @@
 "use client"
-import { Dispatch, SetStateAction, useContext, useEffect, useRef, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { Message, MessageBubble } from "./messageBubble";
 import { GiCutLemon } from "react-icons/gi";
@@ -8,7 +8,7 @@ import { useTypeOutput } from "../hooks/useTypeOutput";
 import { getMessages } from "../services/message";
 import { updateChatTitle } from "../services/chat";
 import { CiLogout } from "react-icons/ci";
-const BACKEND_URL = "http://localhost:3002";
+import { BACKEND_URL } from "../services/config";
 
 export const ChatInterface = ({ chat, setChat }: { 
     chat: string, setChat: 
@@ -54,7 +54,8 @@ export const ChatInterface = ({ chat, setChat }: {
         const response = await fetch(`${BACKEND_URL}/api/message`, {
             method: "POST",
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
             },
             body: JSON.stringify({
                 chatId: chat,
@@ -77,13 +78,10 @@ export const ChatInterface = ({ chat, setChat }: {
         setLoading(false);
 
         while (!done) {
-            // console.log("entered");
             const { value, done: readerDone } = await reader.read();
             done = readerDone;
             const chunk = decoder.decode(value);
             fullAssistantMessage += chunk;
-            // console.log('Inside loop', output);
-            // setOutput((prev) => prev + chunk); // Append chunk to output
             outputRef.current += chunk;
             setOutput(outputRef.current);  // triggers typing hook smoothly
         }
@@ -113,7 +111,7 @@ export const ChatInterface = ({ chat, setChat }: {
             }))
             setMessages(msgs);
         })()
-        
+
     }, [chat, token]);
 
     useEffect(() => {

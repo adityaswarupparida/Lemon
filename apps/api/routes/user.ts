@@ -3,6 +3,7 @@ import { UserSchema } from "../types";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import prisma from "@repo/db";
+import { authMiddleware } from "../middleware";
 const router = Router();
 const saltRounds = parseInt(process.env.SALT_ROUNDS!);
 const jwtSecret = process.env.JWT_SECRET!;
@@ -95,5 +96,27 @@ router.post("/signin", async (req, res) => {
     }
 });
 
+router.get("/details", authMiddleware, async (req, res) => {
+    try {
+        const user = await prisma.user.findFirst({
+            where: {
+                id: req.userId
+            },
+            select: {
+                firstName: true,
+                lastName: true,
+                email: true
+            }
+        });
+
+        res.json({
+            user
+        })
+    } catch(e) {
+        res.status(500).json({
+            message: "Internal Server Error"
+        })
+    }
+});
 
 export default router;

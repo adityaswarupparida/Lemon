@@ -50,3 +50,24 @@ export const signIn = async (input: SignInInput) => {
         return { error: "Unexpected error" };
     }
 }
+
+export const getDetails = async (token: string) => {
+    try {
+        const response = await axios.get(`${BACKEND_URL}/api/user/details`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+
+        return {
+            user: response.data.user
+        };
+    } catch (err) {
+        console.log(err);
+        if (axios.isAxiosError(err)) {
+            return { 
+                error: err.response?.data.message 
+            };
+        }
+        
+        return { error: "Unexpected error" };
+    }
+}

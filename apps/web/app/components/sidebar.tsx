@@ -2,30 +2,48 @@
 import { GiCutLemon } from "react-icons/gi";
 import { AiOutlineWechat } from "react-icons/ai";
 import { GoSearch } from "react-icons/go";
-import { IoIosArrowDown, IoIosArrowForward } from "react-icons/io";
+import { IoIosArrowDown, IoIosArrowForward, IoIosLogOut } from "react-icons/io";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { createNewChat, getChats } from "../services/chat";
+import { useRouter } from "next/navigation";
+import { getDetails } from "../services/user";
+import { User } from "../types";
+import { concatenate, getInitials } from "../utils";
 
 export const Sidebar = ({ setChat }: { setChat: Dispatch<SetStateAction<string>> }) => {
+    const router = useRouter();
     const [chats, setChats] = useState<any[]>([]);
     const [toggleChats, setToggleChats] = useState(true);
-    const [token, setToken] = useState("");
+    const [token, setToken] = useState<string | null>(null);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [user, setUser] = useState<User>();
 
     useEffect(() => {
         let token = localStorage.getItem("auth_token");
-        if (token) 
-            setToken(token);
+        setToken(token);
+        setLoading(false);
     }, [])
+
+    useEffect(() => {
+        if (loading) return;
+        if (!token) 
+            router.push("/signin");
+    }, [token])
 
     useEffect(() => {
         if (!token) return;
 
         (async () => {
-            const res = await getChats(token);
-            console.log(`use effect`, res[0])
-            setChats(res)
-        })()
-    }, [])
+            const chats = await getChats(token);
+            setChats(chats)
+        })();
+
+        (async () => {
+            const response = await getDetails(token);
+            setUser(response.user);
+        })();
+
+    }, [token])
 
     const handleNewChat = async () => {
         if (!token) return;
@@ -34,8 +52,14 @@ export const Sidebar = ({ setChat }: { setChat: Dispatch<SetStateAction<string>>
         setChat(chatId);
     }
 
+    const handleLogout = () => {
+        if (loading) return;
+        localStorage.removeItem("auth_token");
+        setToken(null);
+    }
+
     return (
-        <div className="min-w-60 w-60 bg-stone-50 hidden sm:block h-full overflow-hidden">
+        <div className="min-w-60 w-60 bg-stone-50 hidden sm:block h-full overflow-hidden relative">
             <div className="flex items-center justify-start gap-2 pl-2 pb-1 cursor-pointer">
                 <GiCutLemon fill="oklch(85.2% 0.199 91.936)" size={40} className="transition-all duration-300 text-amber-300 hover:animate-squeeze"/>
                 <span className="text-3xl pt-2 handlee-regular text-black">Lemon</span>
@@ -67,6 +91,21 @@ export const Sidebar = ({ setChat }: { setChat: Dispatch<SetStateAction<string>>
                         </div>
                     ))}
                 </div>}
+            </div>
+            <div className="text-black bg-white h-16 bottom-0 left-0 absolute w-full flex items-center justify-between px-3 border border-t border-stone-100 shadow-xl">
+                <div className="flex items-center">
+                    <div className="relative flex justify-center items-center">
+                        <div className="h-8 w-8 bg-amber-500  rounded-full"></div>
+                        <div className="absolute text-white">{getInitials(user?.firstName, user?.lastName)}</div>
+                    </div>
+                    <div className="truncate pl-2 handlee-regular flex flex-col items-start">
+                        <div className="text-md">{concatenate(user?.firstName, user?.lastName, "")}</div>
+                        <div className="text-xs">{user?.email}</div>
+                    </div>
+                </div>
+                <div onClick={handleLogout}>
+                    <IoIosLogOut className="text-3xl text-stone-300 hover:text-red-500 cursor-pointer" />
+                </div>
             </div>
         </div>
     );

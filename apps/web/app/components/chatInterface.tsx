@@ -22,7 +22,7 @@ export const ChatInterface = ({ chat, setChat }: {
     const containerRef = useRef<HTMLDivElement | null>(null);
     const outputRef = useRef("");
     const { typedOutput } = useTypeOutput(output);
-    const [token, setToken] = useState("");
+    const [token, setToken] = useState<string | null>(null);
 
     useEffect(() => {
         let token = localStorage.getItem("auth_token");
@@ -113,7 +113,8 @@ export const ChatInterface = ({ chat, setChat }: {
             }))
             setMessages(msgs);
         })()
-    }, [chat]);
+        
+    }, [chat, token]);
 
     useEffect(() => {
         containerRef.current?.scrollTo(0, containerRef.current.scrollHeight);

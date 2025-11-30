@@ -1,8 +1,11 @@
 import { BACKEND_URL } from "./config";
 
-export const getChats = async () => {
+export const getChats = async (token: string) => {
     const response = await fetch(`${BACKEND_URL}/api/chat`, {
         method: "GET",
+        headers: {
+            "Authorization": `Bearer ${token}`
+        }
     });
 
     const results = await response.json();
@@ -10,11 +13,12 @@ export const getChats = async () => {
     return results.chats;
 }
 
-export const createNewChat = async () => {
+export const createNewChat = async (token: string) => {
     const response = await fetch(`${BACKEND_URL}/api/chat`, {
         method: "POST",
         headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify({
             title: "Untitled",
@@ -26,11 +30,12 @@ export const createNewChat = async () => {
     return results.chat;
 }
 
-export const updateChatTitle = async (chatId: string, input: string) => {
+export const updateChatTitle = async (chatId: string, input: string, token: string) => {
     const response = await fetch(`${BACKEND_URL}/api/chat/${chatId}/update-title`, {
         method: "PATCH",
         headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify({
             input,

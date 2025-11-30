@@ -1,14 +1,27 @@
 "use client"
 import { Sidebar } from "./sidebar";
 import { ChatInterface } from "./chatInterface";
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import { ChatContext } from "../providers/chatContext";
 import { Home } from "./home";
+import { useRouter } from "next/navigation";
 
 export const ChatWorkspace = () => {
     const ctx = useContext(ChatContext);
-    if (!ctx) return <div>Invalid ChatId</div>;
+    if (!ctx) return null;
     const { chat, setChat } = ctx;
+    const router = useRouter();
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const token = localStorage.getItem("auth_token");
+        if (!token) 
+            router.push("/signup");
+        else 
+            setLoading(false)
+    }, []);
+
+    if (loading) return null;
 
     return (
         <>

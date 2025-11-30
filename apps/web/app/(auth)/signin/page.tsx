@@ -25,26 +25,27 @@ export default function SignIn() {
 
     const isValid = input.email && input.password;
     
-    const handleClick = () => {
+    const handleClick = async () => {
         setLoading(true);
 
         // make api call
-        (async () => {
-            const { error, token } = await signIn(input);
-            if (error) {
-                toast.error("Error while signing in: "+error);
-                return;
-            }
-            localStorage.setItem("auth_token", token);
-            toast.success("You are signed in.");
-        })()
-
-        setTimeout(() => {
-            setInput({
-                email: "",
-                password: "",
-            });
+        const { error, token } = await signIn(input);
+        console.log(error, token);
+        if (error) {
+            toast.error("Error while signing in: "+error);
             setLoading(false);
+            return;
+        }
+        localStorage.setItem("auth_token", token);
+        toast.success("You are signed in.");
+
+        setInput({
+            email: "",
+            password: "",
+        });
+        setLoading(false);
+        
+        setTimeout(() => {
             router.push("/");
         }, 1000);
     }

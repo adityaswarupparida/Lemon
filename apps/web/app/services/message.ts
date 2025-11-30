@@ -1,10 +1,11 @@
 import { BACKEND_URL } from "./config";
 
-export const getMessages = async (chatId: string) => {
+export const getMessages = async (chatId: string, token: string) => {
     const response = await fetch(`${BACKEND_URL}/api/message/${chatId}`, {
         method: "GET",
         headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
         },
     });
 

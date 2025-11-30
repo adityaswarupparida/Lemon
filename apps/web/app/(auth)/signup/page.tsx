@@ -37,29 +37,29 @@ export default function SignUp() {
         input.confirmPassword &&
         input.password === input.confirmPassword;
     
-    const handleClick = () => {
+    const handleClick = async () => {
         setLoading(true);
 
         // make api call
-        (async () => {
-            const { error, token } = await signUp(input);
-            if (error) {
-                toast.error("Error while signing up: "+error);
-                return;
-            }
-            localStorage.setItem("auth_token", token);
-            toast.success("You are signed up.");
-        })()
-
-        setTimeout(() => {
-            setInput({
-                firstName: "",
-                lastName: "",
-                email: "",
-                password: "",
-                confirmPassword: ""
-            });
+        const { error, token } = await signUp(input);
+        if (error) {
+            toast.error("Error while signing up: "+error);
             setLoading(false);
+            return;
+        }
+        localStorage.setItem("auth_token", token);
+        toast.success("You are signed up.");
+
+        setInput({
+            firstName: "",
+            lastName: "",
+            email: "",
+            password: "",
+            confirmPassword: ""
+        });
+        setLoading(false);
+        
+        setTimeout(() => {
             router.push("/");
         }, 1000);
     }

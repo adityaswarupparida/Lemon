@@ -4,32 +4,49 @@ import { SignUpInput } from "../(auth)/signup/page";
 import { SignInInput } from "../(auth)/signin/page";
 
 export const signUp = async (input: SignUpInput) => {
-    const response = await axios.post(`${BACKEND_URL}/api/user/signup`, {
-        firstName: input.firstName,
-        lastName: input.lastName,
-        email: input.email,
-        password: input.password
-    });
+    try {
+        const response = await axios.post(`${BACKEND_URL}/api/user/signup`, {
+            firstName: input.firstName,
+            lastName: input.lastName,
+            email: input.email,
+            password: input.password
+        });
 
-    if (response.status != 200)
+        console.log(response.data.user);
         return { 
-            error: response.data.message 
+            token: response.data.token 
         };
-
-    console.log(response.data.user);
-    return { 
-        token: response.data.token 
-    };
+    } catch (err) {
+        console.log(err);
+        if (axios.isAxiosError(err)) {
+            return { 
+                error: err.response?.data.message 
+            };
+        }
+        
+        return { error: "Unexpected error" };
+    }
+    
 }
 
 export const signIn = async (input: SignInInput) => {
-    const response = await axios.post(`${BACKEND_URL}/api/user/signin`, {
-        username: input.email,
-        password: input.password
-    });
+    try {
+        const response = await axios.post(`${BACKEND_URL}/api/user/signin`, {
+            username: input.email,
+            password: input.password
+        });
 
-    if (response.status != 200)
-        return response.data.message;
-
-    return response.data.token;
+        return {
+            token: response.data.token
+        };
+    } catch (err) {
+        console.log(err);
+        if (axios.isAxiosError(err)) {
+            return { 
+                error: err.response?.data.message 
+            };
+        }
+        
+        return { error: "Unexpected error" };
+    }
 }

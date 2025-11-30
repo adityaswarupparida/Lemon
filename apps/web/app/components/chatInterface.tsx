@@ -22,13 +22,21 @@ export const ChatInterface = ({ chat, setChat }: {
     const containerRef = useRef<HTMLDivElement | null>(null);
     const outputRef = useRef("");
     const { typedOutput } = useTypeOutput(output);
+    const [token, setToken] = useState("");
+
+    useEffect(() => {
+        let token = localStorage.getItem("auth_token");
+        if (token) 
+            setToken(token);
+    }, [])
 
     const handleClick = async () => {
+        if (!token) return;
         // console.log(input, messages.length)
         const request = input;
 
         if (messages.length == 0) {
-            updateChatTitle(chat, request);
+            updateChatTitle(chat, request, token);
         }
         // Add user message
         setMessages((prev) => [
@@ -60,8 +68,6 @@ export const ChatInterface = ({ chat, setChat }: {
             return;
         }
 
-        // inputRef.current = '';
-
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let done = false;
@@ -82,7 +88,6 @@ export const ChatInterface = ({ chat, setChat }: {
             setOutput(outputRef.current);  // triggers typing hook smoothly
         }
 
-        // console.log('fullAssistantMessage' + fullAssistantMessage);
         setMessages((prev) => [
             ...prev,
             { 
@@ -96,9 +101,10 @@ export const ChatInterface = ({ chat, setChat }: {
     }
 
     useEffect(() => {
+        if (!token) return;
+
         (async () => {
-            let msgs = await getMessages(chat);
-            // console.log(`use effect in Chat Interface`, msgs)
+            let msgs = await getMessages(chat, token);
 
             msgs = msgs.map((msg: any) => ({ 
                 id: msg.id, 
@@ -151,9 +157,6 @@ export const ChatInterface = ({ chat, setChat }: {
                             </div>
                         </div>
                     )}
-                    {/* <div className="flex items-center mt-1">
-                        <LemonAnimation />
-                    </div> */}
                 </div>
                 <div className="px-40 my-3 rounded-3xl">
                     <div className="h-14 flex items-center px-1 gap-2 bg-stone-100 rounded-3xl">

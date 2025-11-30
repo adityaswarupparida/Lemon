@@ -9,17 +9,27 @@ import { createNewChat, getChats } from "../services/chat";
 export const Sidebar = ({ setChat }: { setChat: Dispatch<SetStateAction<string>> }) => {
     const [chats, setChats] = useState<any[]>([]);
     const [toggleChats, setToggleChats] = useState(true);
+    const [token, setToken] = useState("");
 
     useEffect(() => {
+        let token = localStorage.getItem("auth_token");
+        if (token) 
+            setToken(token);
+    }, [])
+
+    useEffect(() => {
+        if (!token) return;
+
         (async () => {
-            const res = await getChats();
+            const res = await getChats(token);
             console.log(`use effect`, res[0])
             setChats(res)
         })()
     }, [])
 
     const handleNewChat = async () => {
-        const chatId = await createNewChat();
+        if (!token) return;
+        const chatId = await createNewChat(token);
         setChats((prev) => [{ id: chatId, title: "Untitled" }, ...prev]);
         setChat(chatId);
     }

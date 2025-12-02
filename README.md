@@ -1,6 +1,14 @@
 # Demo
 <video src="https://github.com/user-attachments/assets/76a8b7e7-3b71-4518-a32f-2bd0a2545984" muted controls autoplay playsinline loop></video>
 
+# Screenshots
+
+## Chat Interface
+<img width="1710" height="979" alt="Screenshot 2025-12-03 at 3 38 44 AM" src="https://github.com/user-attachments/assets/a861cbb3-0b41-4d55-86ee-19025e9c30b8" />
+
+## Auth
+<img width="1710" height="978" alt="Screenshot 2025-12-03 at 3 39 11 AM" src="https://github.com/user-attachments/assets/577fae7a-fce3-4388-8e61-0a8b966a0e7a" />
+
 
 # Turborepo starter
 

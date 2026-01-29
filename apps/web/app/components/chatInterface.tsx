@@ -9,10 +9,11 @@ import { getMessages } from "../services/message";
 import { updateChatTitle } from "../services/chat";
 import { CiLogout } from "react-icons/ci";
 import { BACKEND_URL } from "../services/config";
+import { ChatItem } from "../types";
 
 export const ChatInterface = ({ chat, setChat }: { 
-    chat: string, setChat: 
-    Dispatch<SetStateAction<string>> 
+    chat: ChatItem | null, 
+    setChat: Dispatch<SetStateAction<ChatItem | null>> 
 }) => {
 
     const [messages, setMessages] = useState<Message[]>([]);
@@ -31,12 +32,11 @@ export const ChatInterface = ({ chat, setChat }: {
     }, [])
 
     const handleClick = async () => {
-        if (!token) return;
-        // console.log(input, messages.length)
+        if (!token || !chat) return;
         const request = input;
 
         if (messages.length == 0) {
-            updateChatTitle(chat, request, token);
+            await updateChatTitle(chat.id, request, token);
         }
         // Add user message
         setMessages((prev) => [
@@ -99,10 +99,10 @@ export const ChatInterface = ({ chat, setChat }: {
     }
 
     useEffect(() => {
-        if (!token) return;
+        if (!token || !chat) return;
 
         (async () => {
-            let msgs = await getMessages(chat, token);
+            let msgs = await getMessages(chat.id, token);
 
             msgs = msgs.map((msg: any) => ({ 
                 id: msg.id, 
@@ -124,7 +124,7 @@ export const ChatInterface = ({ chat, setChat }: {
                 <div className="text-black"></div>
                 <div className="flex items-center gap-3">
                     <CiLogout className="text-black hover:text-amber-400 text-3xl hover:cursor-pointer"
-                        onClick={() => setChat("")}
+                        onClick={() => setChat(null)}
                     />
                     <button className="bg-yellow-400 text-black w-20 h-4/5 py-2 px-4 rounded-lg cursor-pointer hover:bg-amber-300">Share</button>
                 </div>

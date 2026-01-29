@@ -25,9 +25,9 @@ export const ChatWorkspace = () => {
 
     return (
         <>
-            <Sidebar setChat={setChat} />
-            { chat !== "" && <ChatInterface  chat={chat} setChat={setChat} /> }
-            { chat === "" && <Home /> }
+            <Sidebar chat={chat} setChat={setChat} />
+            { chat && <ChatInterface  chat={chat} setChat={setChat} /> }
+            { !chat && <Home /> }
 
         </>
     )

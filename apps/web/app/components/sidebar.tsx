@@ -9,10 +9,14 @@ import { useRouter } from "next/navigation";
 import { getDetails } from "../services/user";
 import { User } from "../types";
 import { concatenate, getInitials } from "../utils";
+import { ChatItem } from "../types";
 
-export const Sidebar = ({ setChat }: { setChat: Dispatch<SetStateAction<string>> }) => {
+export const Sidebar = ({ chat, setChat }: { 
+    chat: ChatItem | null, 
+    setChat: Dispatch<SetStateAction<ChatItem | null>> 
+}) => {
     const router = useRouter();
-    const [chats, setChats] = useState<any[]>([]);
+    const [chats, setChats] = useState<ChatItem[]>([]);
     const [toggleChats, setToggleChats] = useState(true);
     const [token, setToken] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
@@ -49,7 +53,7 @@ export const Sidebar = ({ setChat }: { setChat: Dispatch<SetStateAction<string>>
         if (!token) return;
         const chatId = await createNewChat(token);
         setChats((prev) => [{ id: chatId, title: "Untitled" }, ...prev]);
-        setChat(chatId);
+        setChat({ id: chatId, title: "Untitled" });
     }
 
     const handleLogout = () => {
@@ -86,7 +90,7 @@ export const Sidebar = ({ setChat }: { setChat: Dispatch<SetStateAction<string>>
                 </button>
                 {toggleChats && chats && <div>
                     {chats.map((c, ind) => (
-                        <div key={`${ind}`} onClick={() => setChat(c.id)} className="text-black handlee-regular pl-5 pt-2 line-clamp-1 hover:bg-stone-200 cursor-pointer">
+                        <div key={`${ind}`} onClick={() => setChat({ id: c.id, title: c.title })} className="text-black handlee-regular pl-5 pt-2 line-clamp-1 hover:bg-stone-200 cursor-pointer">
                             {c.title}
                         </div>
                     ))}

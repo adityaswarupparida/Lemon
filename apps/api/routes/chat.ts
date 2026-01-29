@@ -6,13 +6,13 @@ const router = Router()
 const ai = new GoogleGenAI({apiKey: process.env.GEMINI_API_KEY});
 
 router.get("/", async (req, res) => {
-    const userId = req.userId ?? "1edf9732-5ab3-450b-9b54-0357a072f77b";
+    const userId = req.userId;
 
     if (!userId) {
-        res.status(409).json({
+        res.status(401).json({
             message: "Not Authorized"
         });
-        return
+        return;
     }
 
     const chats = await prisma.chat.findMany({
@@ -30,13 +30,13 @@ router.get("/", async (req, res) => {
 });
 
 router.post("/", async (req, res) => {
-    const userId = req.userId ?? "1edf9732-5ab3-450b-9b54-0357a072f77b";
+    const userId = req.userId;
 
     if (!userId) {
-        res.status(409).json({
+        res.status(401).json({
             message: "Not Authorized"
         });
-        return
+        return;
     }
 
     const parsedBody = ChatSchema.safeParse(req.body);
@@ -58,101 +58,130 @@ router.post("/", async (req, res) => {
 });
 
 router.patch("/:id/update-title", async (req, res) => {
-    const userId = req.userId ?? "1edf9732-5ab3-450b-9b54-0357a072f77b";
+    const userId = req.userId;
 
     if (!userId) {
-        res.status(409).json({
+        res.status(401).json({
             message: "Not Authorized"
         });
-        return
+        return;
     }
 
-    const id = req.params.id
-    const { input } = req.body
+    const id = req.params.id;
+    const { input } = req.body;
 
-    const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: input,
-        config: {
-            systemInstruction: `
-            You are a Message Summarizer.
-
-            RULES:
-            - You will generate a short title based on the first message a user begins a conversation with
-            - Ensure it is not more than 80 characters long
-            - The title should be a summary of the user's message
-            - If the user has attached files, consider them in the title (e.g., "Image analysis request", "PDF document review", etc.)
-            - You should NOT answer the user's message, you should only generate a summary/title
-            - Do not use quotes or colons
-            `
-        }
-    });
-    console.log(response.text)
-
-    await prisma.chat.update({
-        where: {
-            id
-        },
-        data: {
-            title: response.text,
-        }
+    // Verify user owns this chat
+    const chat = await prisma.chat.findFirst({
+        where: { id, userId }
     });
 
-    res.status(202).json({
-        chat: id,
-        title: response.text,
-    })
+    if (!chat) {
+        res.status(404).json({ message: "Chat not found" });
+        return;
+    }
+
+    try {
+        const response = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: input,
+            config: {
+                systemInstruction: `
+                You are a Message Summarizer.
+
+                RULES:
+                - You will generate a short title based on the first message a user begins a conversation with
+                - Ensure it is not more than 80 characters long
+                - The title should be a summary of the user's message
+                - If the user has attached files, consider them in the title (e.g., "Image analysis request", "PDF document review", etc.)
+                - You should NOT answer the user's message, you should only generate a summary/title
+                - Do not use quotes or colons
+                `
+            }
+        });
+
+        await prisma.chat.update({
+            where: { id },
+            data: { title: response.text }
+        });
+
+        res.status(202).json({
+            chat: id,
+            title: response.text
+        });
+    } catch (error) {
+        console.error("Error updating title:", error);
+        res.status(500).json({ message: "Failed to update title" });
+    }
 });
 
 router.patch("/:id/share", async (req, res) => {
     const userId = req.userId;
 
     if (!userId) {
-        res.status(409).json({
+        res.status(401).json({
             message: "Not Authorized"
         });
-        return
+        return;
     }
 
-    const id = req.params.id
+    const id = req.params.id;
     const { shareable } = req.body;
 
+    // Verify user owns this chat
+    const chat = await prisma.chat.findFirst({
+        where: { id, userId }
+    });
+
+    if (!chat) {
+        res.status(404).json({ message: "Chat not found" });
+        return;
+    }
+
     await prisma.chat.update({
-        where: {
-            id
-        },
-        data: {
-            shareable : !shareable   
-        }
+        where: { id },
+        data: { shareable: !shareable }
     });
 
     res.status(202).json({
         chat: id,
         shareable: !shareable
-    })
+    });
 });
 
 router.delete("/:id", async (req, res) => {
     const userId = req.userId;
 
     if (!userId) {
-        res.status(409).json({
+        res.status(401).json({
             message: "Not Authorized"
         });
-        return
+        return;
     }
 
-    const id = req.params.id
+    const id = req.params.id;
+
+    // Verify user owns this chat
+    const chat = await prisma.chat.findFirst({
+        where: { id, userId }
+    });
+
+    if (!chat) {
+        res.status(404).json({ message: "Chat not found" });
+        return;
+    }
+
+    // Delete associated messages first, then the chat
+    await prisma.message.deleteMany({
+        where: { chatId: id }
+    });
 
     await prisma.chat.delete({
-        where: {
-            id
-        }
+        where: { id }
     });
 
     res.status(202).json({
         chat: id
-    })
+    });
 });
 
 export default router;

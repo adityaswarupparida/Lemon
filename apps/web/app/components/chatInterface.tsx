@@ -4,26 +4,27 @@ import ReactMarkdown from "react-markdown";
 import { Message, MessageBubble } from "./messageBubble";
 import { GiCutLemon } from "react-icons/gi";
 import { LemonAnimation } from "./ui/lemonAnimation";
-import { useTypeOutput } from "../hooks/useTypeOutput";
+import { useStreamingText } from "../hooks/useStreamingText";
 import { getMessages } from "../services/message";
 import { updateChatTitle } from "../services/chat";
 import { CiLogout } from "react-icons/ci";
 import { BACKEND_URL } from "../services/config";
 import { ChatItem } from "../types";
 
-export const ChatInterface = ({ chat, setChat }: { 
-    chat: ChatItem | null, 
-    setChat: Dispatch<SetStateAction<ChatItem | null>> 
+export const ChatInterface = ({ chat, setChat }: {
+    chat: ChatItem | null,
+    setChat: Dispatch<SetStateAction<ChatItem | null>>
 }) => {
 
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
-    const [output, setOutput] = useState('');
     const [loading, setLoading] = useState(false);
+    const [isStreaming, setIsStreaming] = useState(false);
+    const [streamingComplete, setStreamingComplete] = useState(false);
     const containerRef = useRef<HTMLDivElement | null>(null);
-    const outputRef = useRef("");
-    const { typedOutput } = useTypeOutput(output);
+    const fullMessageRef = useRef("");
     const [token, setToken] = useState<string | null>(null);
+    const { displayedText, addChunk, reset } = useStreamingText(6);
 
     useEffect(() => {
         let token = localStorage.getItem("auth_token");
@@ -32,70 +33,73 @@ export const ChatInterface = ({ chat, setChat }: {
     }, [])
 
     const handleClick = async () => {
-        if (!token || !chat) return;
-        const request = input;
+        const request = input.trim();
+        if (!token || !chat || !request || isStreaming) return;
 
-        if (messages.length == 0) {
-            await updateChatTitle(chat.id, request, token);
+        if (messages.length === 0) {
+            updateChatTitle(chat.id, request, token);
         }
         // Add user message
         setMessages((prev) => [
             ...prev,
-            { 
-                content: request, 
-                role: "user", 
-                id: prev.length === 0 ? 0: prev[prev.length - 1]?.id ?? 0 + 1
+            {
+                content: request,
+                role: "user",
+                id: (prev[prev.length - 1]?.id ?? -1) + 1
             }
         ]);
         setInput("");
         setLoading(true);
+        setIsStreaming(true);
 
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/message`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    chatId: chat.id,
+                    content: request,
+                    role: "user"
+                }),
+            });
 
-        const response = await fetch(`${BACKEND_URL}/api/message`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
-            },
-            body: JSON.stringify({
-                chatId: chat,
-                content: request,
-                role: "user"
-            }),
-        }); // Connect to the backend API
-
-        if (!response.body) {
-            console.error('No response body');
-            return;
-        }
-
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let done = false;
-        let fullAssistantMessage = "";
-        outputRef.current = "";
-        setOutput("")
-        setLoading(false);
-
-        while (!done) {
-            const { value, done: readerDone } = await reader.read();
-            done = readerDone;
-            const chunk = decoder.decode(value);
-            fullAssistantMessage += chunk;
-            outputRef.current += chunk;
-            setOutput(outputRef.current);  // triggers typing hook smoothly
-        }
-
-        setMessages((prev) => [
-            ...prev,
-            { 
-                content: fullAssistantMessage, 
-                role: "assistant", 
-                id: prev.length === 0 ? 1: prev[prev.length - 1]?.id ?? 0 + 1 
+            if (!response.ok) {
+                throw new Error(`HTTP error: ${response.status}`);
             }
-        ]);
 
-        setOutput("")
+            if (!response.body) {
+                throw new Error('No response body');
+            }
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let done = false;
+            fullMessageRef.current = "";
+            setStreamingComplete(false);
+            reset();
+            setLoading(false);
+
+            while (!done) {
+                const { value, done: readerDone } = await reader.read();
+                done = readerDone;
+                if (value) {
+                    const chunk = decoder.decode(value, { stream: !readerDone });
+                    fullMessageRef.current += chunk;
+                    addChunk(chunk);
+                }
+            }
+
+            // Mark streaming as complete - the effect will handle adding to messages
+            setStreamingComplete(true);
+        } catch (error) {
+            console.error('Failed to send message:', error);
+            setLoading(false);
+            reset();
+            setIsStreaming(false);
+        }
     }
 
     useEffect(() => {
@@ -114,9 +118,26 @@ export const ChatInterface = ({ chat, setChat }: {
 
     }, [chat, token]);
 
+    // When typing catches up to the full message, add to messages
+    useEffect(() => {
+        if (streamingComplete && displayedText.length >= fullMessageRef.current.length && fullMessageRef.current.length > 0) {
+            setMessages((prev) => [
+                ...prev,
+                {
+                    content: fullMessageRef.current,
+                    role: "assistant",
+                    id: (prev[prev.length - 1]?.id ?? 0) + 1
+                }
+            ]);
+            reset();
+            setStreamingComplete(false);
+            setIsStreaming(false);
+        }
+    }, [streamingComplete, displayedText, reset]);
+
     useEffect(() => {
         containerRef.current?.scrollTo(0, containerRef.current.scrollHeight);
-    }, [messages, output]);
+    }, [messages, displayedText]);
 
     return (
         <div className="flex flex-col flex-1 h-full handlee-regular selection:bg-yellow-100">
@@ -146,10 +167,10 @@ export const ChatInterface = ({ chat, setChat }: {
                         </div>
                     )}
 
-                    {output !== "" && (
+                    {displayedText !== "" && (
                         <div className="flex flex-col items-start mt-2">
-                            <div className="prose"> 
-                                <ReactMarkdown>{typedOutput}</ReactMarkdown>
+                            <div className="prose">
+                                <ReactMarkdown>{displayedText}</ReactMarkdown>
                             </div>
                             <div className="flex items-center mt-1">
                                 <LemonAnimation />
@@ -159,13 +180,22 @@ export const ChatInterface = ({ chat, setChat }: {
                 </div>
                 <div className="px-40 my-3 rounded-3xl">
                     <div className="h-14 flex items-center px-1 gap-2 bg-stone-100 rounded-3xl">
-                        <input type="text" placeholder="Ask anything" className="bg-white h-4/5 py-1 px-3 flex-1 text-black text-lg rounded-3xl focus:outline-amber-300 focus:outline-solid"
+                        <input
+                            type="text"
+                            placeholder="Ask anything"
+                            className="bg-white h-4/5 py-1 px-3 flex-1 text-black text-lg rounded-3xl focus:outline-amber-300 focus:outline-solid disabled:opacity-50"
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
-                            onKeyDown={(e) => e.key === "Enter" && handleClick()}
-                        ></input>
-                        <button className="bg-yellow-400 text-black w-20 h-4/5 py-2 px-4 rounded-3xl cursor-pointer hover:bg-amber-300"
-                            onClick={handleClick}>Send</button>
+                            onKeyDown={(e) => e.key === "Enter" && !isStreaming && handleClick()}
+                            disabled={isStreaming}
+                        />
+                        <button
+                            className="bg-yellow-400 text-black w-20 h-4/5 py-2 px-4 rounded-3xl cursor-pointer hover:bg-amber-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                            onClick={handleClick}
+                            disabled={isStreaming || !input.trim()}
+                        >
+                            {isStreaming ? "..." : "Send"}
+                        </button>
                     </div>
                 </div>
             </div>

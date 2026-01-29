@@ -89,7 +89,10 @@ router.post("/", async (req, res) => {
             model: "gemini-2.5-flash",
             contents: contents,
             config: {
-                systemInstruction: prompt
+                systemInstruction: prompt,
+                tools: [
+                    { googleSearch: {} }
+                ],
             }
         });
 

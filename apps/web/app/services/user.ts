@@ -32,7 +32,7 @@ export const signUp = async (input: SignUpInput) => {
 export const signIn = async (input: SignInInput) => {
     try {
         const response = await axios.post(`${BACKEND_URL}/api/user/signin`, {
-            username: input.email,
+            email: input.email,
             password: input.password
         });
 

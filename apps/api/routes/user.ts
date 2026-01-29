@@ -26,7 +26,7 @@ router.post("/signup", async (req, res) => {
         })
 
         if (isUserPresent) {
-            res.status(400).json({
+            res.status(409).json({
                 message: "User already exists. Please sign in instead."
             })
             return
@@ -47,7 +47,7 @@ router.post("/signup", async (req, res) => {
             sub: user.id
         }, jwtSecret);
 
-        res.json({
+        res.status(201).json({
             user: user.id,
             token
         })
@@ -60,15 +60,15 @@ router.post("/signup", async (req, res) => {
 
 router.post("/signin", async (req, res) => {
     try {  
-        const { username, password } = req.body;
+        const { email, password } = req.body;
         const user = await prisma.user.findFirst({
             where: {
-                email: username
+                email
             }
         })
 
         if (!user) {
-            res.status(409).json({
+            res.status(401).json({
                 message: "Unauthorized"
             })
             return
@@ -76,7 +76,7 @@ router.post("/signin", async (req, res) => {
 
         const matched = await bcrypt.compare(password, user.password);
         if (!matched) {
-            res.status(400).json({
+            res.status(401).json({
                 message: "Bad Request: Incorrect Password"
             });
             return;

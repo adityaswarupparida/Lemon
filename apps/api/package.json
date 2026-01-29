@@ -3,7 +3,13 @@
   "module": "index.ts",
   "type": "module",
   "scripts": {
-    "dev": "bun index.ts"
+    "dev": "bun index.ts",
+    "test": "bun test ./tests/",
+    "test:watch": "bun test ./tests/ --watch",
+    "eval": "bun test ./evals/",
+    "eval:streaming": "bun test ./evals/streaming.eval.ts",
+    "eval:title": "bun test ./evals/title.eval.ts",
+    "eval:quality": "bun test ./evals/response-quality.eval.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",

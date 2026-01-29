@@ -41,8 +41,7 @@ export const updateChatTitle = async (chatId: string, input: string, token: stri
             input,
         }),
     });
-    
+
     const results = await response.json();
-    console.log(results);
     return results.title;
 }

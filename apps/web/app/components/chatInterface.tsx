@@ -1,5 +1,5 @@
 "use client"
-import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
+import { Dispatch, SetStateAction, useContext, useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { Message, MessageBubble } from "./messageBubble";
 import { GiCutLemon } from "react-icons/gi";
@@ -10,11 +10,14 @@ import { updateChatTitle } from "../services/chat";
 import { CiLogout } from "react-icons/ci";
 import { BACKEND_URL } from "../services/config";
 import { ChatItem } from "../types";
+import { ChatContext } from "../providers/chatContext";
 
 export const ChatInterface = ({ chat, setChat }: {
     chat: ChatItem | null,
     setChat: Dispatch<SetStateAction<ChatItem | null>>
 }) => {
+    const context = useContext(ChatContext);
+    const { updateChatTitleInList, setStreamingTitle } = context!;
 
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
@@ -37,7 +40,13 @@ export const ChatInterface = ({ chat, setChat }: {
         if (!token || !chat || !request || isStreaming) return;
 
         if (messages.length === 0) {
-            updateChatTitle(chat.id, request, token);
+            updateChatTitle(chat.id, request, token).then((title) => {
+                if (title) {
+                    // Trigger frontend animation
+                    setStreamingTitle({ chatId: chat.id, title, complete: true });
+                    updateChatTitleInList(chat.id, title);
+                }
+            });
         }
         // Add user message
         setMessages((prev) => [

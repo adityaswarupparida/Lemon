@@ -3,24 +3,80 @@ import { GiCutLemon } from "react-icons/gi";
 import { AiOutlineWechat } from "react-icons/ai";
 import { GoSearch } from "react-icons/go";
 import { IoIosArrowDown, IoIosArrowForward, IoIosLogOut } from "react-icons/io";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { createNewChat, getChats } from "../services/chat";
 import { useRouter } from "next/navigation";
 import { getDetails } from "../services/user";
 import { User } from "../types";
 import { concatenate, getInitials } from "../utils";
-import { ChatItem } from "../types";
+import { ChatContext } from "../providers/chatContext";
 
-export const Sidebar = ({ chat, setChat }: { 
-    chat: ChatItem | null, 
-    setChat: Dispatch<SetStateAction<ChatItem | null>> 
-}) => {
+export const Sidebar = () => {
     const router = useRouter();
-    const [chats, setChats] = useState<ChatItem[]>([]);
+    const context = useContext(ChatContext);
+    const { setChat, chats, setChats, streamingTitle, setStreamingTitle } = context!;
     const [toggleChats, setToggleChats] = useState(true);
     const [token, setToken] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [user, setUser] = useState<User>();
+
+    // Typing animation for streaming title
+    const [displayedTitle, setDisplayedTitle] = useState("");
+    const titleIndexRef = useRef(0);
+    const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    const targetTitleRef = useRef("");
+
+    useEffect(() => {
+        if (!streamingTitle) {
+            // Clear everything when streaming ends
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+                intervalRef.current = null;
+            }
+            setDisplayedTitle("");
+            titleIndexRef.current = 0;
+            targetTitleRef.current = "";
+            return;
+        }
+
+        // Update target title
+        targetTitleRef.current = streamingTitle.title;
+
+        // Start typing if not already running
+        if (!intervalRef.current) {
+            intervalRef.current = setInterval(() => {
+                if (titleIndexRef.current < targetTitleRef.current.length) {
+                    titleIndexRef.current++;
+                    setDisplayedTitle(targetTitleRef.current.slice(0, titleIndexRef.current));
+                }
+            }, 30); // Adjust speed here (higher = slower)
+        }
+    }, [streamingTitle, setStreamingTitle]);
+
+    // Check if animation is complete
+    useEffect(() => {
+        if (
+            streamingTitle?.complete &&
+            displayedTitle.length >= streamingTitle.title.length &&
+            streamingTitle.title.length > 0
+        ) {
+            // Animation complete - clear streaming title
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+                intervalRef.current = null;
+            }
+            setStreamingTitle(null);
+        }
+    }, [displayedTitle, streamingTitle, setStreamingTitle]);
+
+    // Cleanup on unmount
+    useEffect(() => {
+        return () => {
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+            }
+        };
+    }, []);
 
     useEffect(() => {
         let token = localStorage.getItem("auth_token");
@@ -30,16 +86,16 @@ export const Sidebar = ({ chat, setChat }: {
 
     useEffect(() => {
         if (loading) return;
-        if (!token) 
+        if (!token)
             router.push("/signin");
-    }, [token])
+    }, [token, loading, router])
 
     useEffect(() => {
         if (!token) return;
 
         (async () => {
-            const chats = await getChats(token);
-            setChats(chats)
+            const fetchedChats = await getChats(token);
+            setChats(fetchedChats);
         })();
 
         (async () => {
@@ -47,7 +103,7 @@ export const Sidebar = ({ chat, setChat }: {
             setUser(response.user);
         })();
 
-    }, [token])
+    }, [token, setChats])
 
     const handleNewChat = async () => {
         if (!token) return;
@@ -89,11 +145,21 @@ export const Sidebar = ({ chat, setChat }: {
                     { !toggleChats && <IoIosArrowForward fill="black" size={15} /> }
                 </button>
                 {toggleChats && chats && <div>
-                    {chats.map((c, ind) => (
-                        <div key={`${ind}`} onClick={() => setChat({ id: c.id, title: c.title })} className="text-black handlee-regular pl-5 pt-2 line-clamp-1 hover:bg-stone-200 cursor-pointer">
-                            {c.title}
-                        </div>
-                    ))}
+                    {chats.map((c, ind) => {
+                        const isStreaming = streamingTitle?.chatId === c.id;
+                        const title = isStreaming
+                            ? (displayedTitle || "...")
+                            : c.title;
+                        return (
+                            <div
+                                key={`${ind}`}
+                                onClick={() => setChat({ id: c.id, title: c.title })}
+                                className="text-black handlee-regular pl-5 pt-2 line-clamp-1 hover:bg-stone-200 cursor-pointer"
+                            >
+                                {title}
+                            </div>
+                        );
+                    })}
                 </div>}
             </div>
             <div className="text-black bg-white h-16 bottom-0 left-0 absolute w-full flex items-center justify-between px-3 border border-t border-stone-100 shadow-xl">

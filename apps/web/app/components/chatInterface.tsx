@@ -24,8 +24,10 @@ export const ChatInterface = ({ chat, setChat }: {
     const [loading, setLoading] = useState(false);
     const [isStreaming, setIsStreaming] = useState(false);
     const [streamingComplete, setStreamingComplete] = useState(false);
+    const [error, setError] = useState<{ message: string; type: string } | null>(null);
     const containerRef = useRef<HTMLDivElement | null>(null);
     const fullMessageRef = useRef("");
+    const lastRequestRef = useRef<string>("");
     const [token, setToken] = useState<string | null>(null);
     const { displayedText, addChunk, reset } = useStreamingText(6);
 
@@ -35,11 +37,14 @@ export const ChatInterface = ({ chat, setChat }: {
             setToken(token);
     }, [])
 
-    const handleClick = async () => {
-        const request = input.trim();
+    const sendMessage = async (request: string, isRetry: boolean = false) => {
         if (!token || !chat || !request || isStreaming) return;
 
-        if (messages.length === 0) {
+        // Store request for potential retry
+        lastRequestRef.current = request;
+        setError(null);
+
+        if (messages.length === 0 && !isRetry) {
             updateChatTitle(chat.id, request, token).then((title) => {
                 if (title) {
                     // Trigger frontend animation
@@ -48,15 +53,19 @@ export const ChatInterface = ({ chat, setChat }: {
                 }
             });
         }
-        // Add user message
-        setMessages((prev) => [
-            ...prev,
-            {
-                content: request,
-                role: "user",
-                id: (prev[prev.length - 1]?.id ?? -1) + 1
-            }
-        ]);
+
+        // Add user message only if not a retry
+        if (!isRetry) {
+            setMessages((prev) => [
+                ...prev,
+                {
+                    content: request,
+                    role: "user",
+                    id: (prev[prev.length - 1]?.id ?? -1) + 1
+                }
+            ]);
+        }
+
         setInput("");
         setLoading(true);
         setIsStreaming(true);
@@ -76,7 +85,8 @@ export const ChatInterface = ({ chat, setChat }: {
             });
 
             if (!response.ok) {
-                throw new Error(`HTTP error: ${response.status}`);
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `HTTP error: ${response.status}`);
             }
 
             if (!response.body) {
@@ -96,6 +106,29 @@ export const ChatInterface = ({ chat, setChat }: {
                 done = readerDone;
                 if (value) {
                     const chunk = decoder.decode(value, { stream: !readerDone });
+
+                    // Check for error marker in stream
+                    if (chunk.includes("[ERROR]")) {
+                        const errorMatch = chunk.match(/\[ERROR\](.+)$/);
+                        if (errorMatch && typeof errorMatch == "string") {
+                            try {
+                                const errorData = JSON.parse(errorMatch[1]);
+                                setError({ message: errorData.message, type: errorData.type });
+                            } catch {
+                                setError({ message: "Something went wrong. Please try again.", type: "unknown" });
+                            }
+                            // Remove error marker from displayed text
+                            const cleanChunk = chunk.replace(/\n?\[ERROR\].+$/, "");
+                            if (cleanChunk) {
+                                fullMessageRef.current += cleanChunk;
+                                addChunk(cleanChunk);
+                            }
+                            setLoading(false);
+                            setIsStreaming(false);
+                            return;
+                        }
+                    }
+
                     fullMessageRef.current += chunk;
                     addChunk(chunk);
                 }
@@ -103,24 +136,41 @@ export const ChatInterface = ({ chat, setChat }: {
 
             // Mark streaming as complete - the effect will handle adding to messages
             setStreamingComplete(true);
-        } catch (error) {
-            console.error('Failed to send message:', error);
+        } catch (err: any) {
+            console.error('Failed to send message:', err);
+            setError({ message: err.message || "Failed to send message. Please try again.", type: "network" });
             setLoading(false);
             reset();
             setIsStreaming(false);
         }
-    }
+    };
+
+    const handleClick = async () => {
+        const request = input.trim();
+        if (!request) return;
+        await sendMessage(request);
+    };
+
+    const handleRetry = async () => {
+        if (!lastRequestRef.current) return;
+        setError(null);
+        reset();
+        await sendMessage(lastRequestRef.current, true);
+    };
 
     useEffect(() => {
         if (!token || !chat) return;
 
+        // Clear error when switching chats
+        setError(null);
+
         (async () => {
             let msgs = await getMessages(chat.id, token);
 
-            msgs = msgs.map((msg: any) => ({ 
-                id: msg.id, 
+            msgs = msgs.map((msg: any) => ({
+                id: msg.id,
                 content: msg.content,
-                role: msg.role.toLowerCase() 
+                role: msg.role.toLowerCase()
             }))
             setMessages(msgs);
         })()
@@ -146,7 +196,7 @@ export const ChatInterface = ({ chat, setChat }: {
 
     useEffect(() => {
         containerRef.current?.scrollTo(0, containerRef.current.scrollHeight);
-    }, [messages, displayedText]);
+    }, [messages, displayedText, error]);
 
     return (
         <div className="flex flex-col flex-1 h-full handlee-regular selection:bg-yellow-100">
@@ -184,6 +234,38 @@ export const ChatInterface = ({ chat, setChat }: {
                             <div className="flex items-center mt-1">
                                 <LemonAnimation />
                             </div>
+                        </div>
+                    )}
+
+                    {displayedText === "" && 
+                        !loading && !error && (
+                        <div className="flex flex-col items-start mt-2">
+                            <div className="flex items-center mt-1 mb-8">
+                                <GiCutLemon
+                                    className={`w-12 h-12 transition-all duration-300 text-amber-300`}
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {error && (
+                        <div className="flex flex-col items-start mt-4 p-4 bg-red-50 border border-red-200 rounded-lg max-w-xl">
+                            <div className="flex items-center gap-2 text-red-600">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                                <span className="font-medium">Error</span>
+                            </div>
+                            <p className="text-red-700 mt-1">{error.message}</p>
+                            <button
+                                onClick={handleRetry}
+                                className="mt-3 flex items-center gap-2 bg-red-100 hover:bg-red-200 text-red-700 px-4 py-2 rounded-lg transition-colors"
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                                Retry
+                            </button>
                         </div>
                     )}
                 </div>

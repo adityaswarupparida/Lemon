@@ -122,11 +122,32 @@ router.post("/", async (req, res) => {
                 content: answer
             }
         });
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error in message streaming:", error);
+
+        // Determine error type and message
+        let errorType = "unknown";
+        let errorMessage = "Something went wrong. Please try again.";
+
+        if (error?.message?.includes("quota") || error?.status === 429) {
+            errorType = "quota_exceeded";
+            errorMessage = "API quota exceeded. Please try again later.";
+        } else if (error?.message?.includes("rate") || error?.code === "RATE_LIMIT_EXCEEDED") {
+            errorType = "rate_limit";
+            errorMessage = "Too many requests. Please wait a moment and try again.";
+        } else if (error?.message?.includes("network") || error?.code === "ECONNREFUSED") {
+            errorType = "network";
+            errorMessage = "Network error. Please check your connection.";
+        } else if (error?.message?.includes("timeout")) {
+            errorType = "timeout";
+            errorMessage = "Request timed out. Please try again.";
+        }
+
         if (!res.headersSent) {
-            res.status(500).json({ error: "Failed to generate response" });
+            res.status(500).json({ error: errorMessage, type: errorType });
         } else {
+            // Send error through stream
+            res.write(`\n[ERROR]${JSON.stringify({ type: errorType, message: errorMessage })}`);
             res.end();
         }
     }

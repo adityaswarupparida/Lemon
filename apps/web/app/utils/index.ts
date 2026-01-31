@@ -4,6 +4,6 @@ export const concatenate = (word1: string | undefined, word2: string | undefined
 }
 
 export const getInitials = (word1: string | undefined, word2: string | undefined) => {
-    if (!word1 || !word2) return "";
-    return concatenate(word1[0].toUpperCase(), word2[0].toUpperCase(), "");
+    if (!word1 || !word2 || word1.length < 1 || word2.length < 1) return "";
+    return concatenate(word1[0]?.toUpperCase(), word2[0]?.toUpperCase(), "");
 }

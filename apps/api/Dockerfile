@@ -1,5 +1,5 @@
 FROM oven/bun:1
-ARG DATABASE_URL="postgres://x:x@x/x"
+ARG DATABASE_URL
 
 WORKDIR /app
 

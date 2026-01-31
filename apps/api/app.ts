@@ -5,6 +5,14 @@ import router from "./routes";
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// Health check for Render
+app.get("/health", (req, res) => {
+    res.status(200).json({ 
+        status: "ok" 
+    });
+});
+
 app.use("/api", router);
 
 export default app;

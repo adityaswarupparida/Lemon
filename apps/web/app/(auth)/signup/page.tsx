@@ -1,10 +1,11 @@
 "use client";
 import Link from 'next/link'
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { GiCutLemon } from "react-icons/gi";
 import { Toaster, toast } from 'sonner';
-import { signUp } from '../../services/user';
+import { getDetails, signUp } from '../../services/user';
+import { getAuthTokenKey } from '../../services/config';
 
 export type SignUpInput = {
     firstName: string;
@@ -24,6 +25,20 @@ export default function SignUp() {
         password: "",
         confirmPassword: ""
     });
+
+    // Redirect if already logged in
+    useEffect(() => {
+        const token = localStorage.getItem(getAuthTokenKey());
+        if (token) {
+            getDetails(token).then((result) => {
+                if (result.user) {
+                    router.push("/");
+                } else {
+                    localStorage.removeItem(getAuthTokenKey());
+                }
+            });
+        }
+    }, [router]);
 
     const handleChange = (field: keyof SignUpInput, value: string) => {
         setInput(prev => ({ ...prev, [field]: value }));
@@ -47,7 +62,7 @@ export default function SignUp() {
             setLoading(false);
             return;
         }
-        localStorage.setItem("auth_token", token);
+        localStorage.setItem(getAuthTokenKey(), token);
         toast.success("You are signed up.");
 
         setInput({

@@ -8,7 +8,7 @@ import { useStreamingText } from "../hooks/useStreamingText";
 import { getMessages } from "../services/message";
 import { updateChatTitle } from "../services/chat";
 import { CiLogout } from "react-icons/ci";
-import { BACKEND_URL } from "../services/config";
+import { BACKEND_URL, getAuthTokenKey } from "../services/config";
 import { ChatItem } from "../types";
 import { ChatContext } from "../providers/chatContext";
 
@@ -32,8 +32,8 @@ export const ChatInterface = ({ chat, setChat }: {
     const { displayedText, addChunk, reset } = useStreamingText(6);
 
     useEffect(() => {
-        let token = localStorage.getItem("auth_token");
-        if (token) 
+        let token = localStorage.getItem(getAuthTokenKey());
+        if (token)
             setToken(token);
     }, [])
 

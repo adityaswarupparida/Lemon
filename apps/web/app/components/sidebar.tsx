@@ -10,6 +10,7 @@ import { getDetails } from "../services/user";
 import { User } from "../types";
 import { concatenate, getInitials } from "../utils";
 import { ChatContext } from "../providers/chatContext";
+import { getAuthTokenKey } from "../services/config";
 
 export const Sidebar = () => {
     const router = useRouter();
@@ -79,7 +80,7 @@ export const Sidebar = () => {
     }, []);
 
     useEffect(() => {
-        let token = localStorage.getItem("auth_token");
+        let token = localStorage.getItem(getAuthTokenKey());
         setToken(token);
         setLoading(false);
     }, [])
@@ -114,7 +115,7 @@ export const Sidebar = () => {
 
     const handleLogout = () => {
         if (loading) return;
-        localStorage.removeItem("auth_token");
+        localStorage.removeItem(getAuthTokenKey());
         setToken(null);
     }
 

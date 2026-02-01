@@ -1,10 +1,11 @@
 "use client"
 import Link from 'next/link'
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { GiCutLemon } from "react-icons/gi";
 import { Toaster, toast } from 'sonner';
-import { signIn } from '../../services/user';
+import { getDetails, signIn } from '../../services/user';
+import { getAuthTokenKey } from '../../services/config';
 
 export type SignInInput = {
     email: string;
@@ -18,6 +19,22 @@ export default function SignIn() {
         email: "",
         password: "",
     });
+
+    // Redirect if already logged in
+    useEffect(() => {
+        const token = localStorage.getItem(getAuthTokenKey());
+        if (token) {
+            // Validate token with backend
+            getDetails(token).then((result) => {
+                if (result.user) {
+                    router.push("/");
+                } else {
+                    // Token invalid - remove it
+                    localStorage.removeItem(getAuthTokenKey());
+                }
+            });
+        }
+    }, [router]);
 
     const handleChange = (field: keyof SignInInput, value: string) => {
         setInput(prev => ({ ...prev, [field]: value }));
@@ -36,7 +53,7 @@ export default function SignIn() {
             setLoading(false);
             return;
         }
-        localStorage.setItem("auth_token", token);
+        localStorage.setItem(getAuthTokenKey(), token);
         toast.success("You are signed in.");
 
         setInput({

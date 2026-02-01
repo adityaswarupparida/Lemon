@@ -1,4 +1,4 @@
-export const BACKEND_URL = process.env.NEXT_PUBLIC_LEMON_BACKEND_URL || "http://localhost:3000";
+export const BACKEND_URL = process.env.NEXT_PUBLIC_LEMON_BACKEND_URL || "http://localhost:3002";
 
 // Use different token keys for dev vs production to avoid conflicts
 export const getAuthTokenKey = () => {

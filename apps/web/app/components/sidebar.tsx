@@ -2,7 +2,7 @@
 import { GiCutLemon } from "react-icons/gi";
 import { AiOutlineWechat } from "react-icons/ai";
 import { GoSearch } from "react-icons/go";
-import { IoIosArrowDown, IoIosArrowForward, IoIosLogOut } from "react-icons/io";
+import { IoIosArrowDown, IoIosLogOut } from "react-icons/io";
 import { useContext, useEffect, useRef, useState } from "react";
 import { createNewChat, getChats } from "../services/chat";
 import { useRouter } from "next/navigation";
@@ -11,6 +11,7 @@ import { User } from "../types";
 import { concatenate, getInitials } from "../utils";
 import { ChatContext } from "../providers/chatContext";
 import { getAuthTokenKey } from "../services/config";
+import { motion, AnimatePresence } from "framer-motion";
 
 export const Sidebar = () => {
     const router = useRouter();
@@ -19,6 +20,7 @@ export const Sidebar = () => {
     const [toggleChats, setToggleChats] = useState(true);
     const [token, setToken] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
+    const [chatsLoading, setChatsLoading] = useState<boolean>(true);
     const [user, setUser] = useState<User>();
 
     // Typing animation for streaming title
@@ -97,6 +99,7 @@ export const Sidebar = () => {
         (async () => {
             const fetchedChats = await getChats(token);
             setChats(fetchedChats);
+            setChatsLoading(false);
         })();
 
         (async () => {
@@ -142,26 +145,53 @@ export const Sidebar = () => {
                     onClick={() => setToggleChats(cur => !cur)}
                 >
                     <span className="text-lg handlee-regular text-black">Your chats</span>
-                    { toggleChats && <IoIosArrowDown fill="black" size={15} /> }
-                    { !toggleChats && <IoIosArrowForward fill="black" size={15} /> }
+                    <motion.div
+                        animate={{ rotate: toggleChats ? 0 : -90 }}
+                        transition={{ duration: 0.2 }}
+                    >
+                        <IoIosArrowDown fill="black" size={15} />
+                    </motion.div>
                 </button>
-                {toggleChats && chats && <div>
-                    {chats.map((c, ind) => {
-                        const isStreaming = streamingTitle?.chatId === c.id;
-                        const title = isStreaming
-                            ? (displayedTitle || "...")
-                            : c.title;
-                        return (
-                            <div
-                                key={`${ind}`}
-                                onClick={() => setChat({ id: c.id, title: c.title })}
-                                className="text-black handlee-regular pl-5 pt-2 line-clamp-1 hover:bg-stone-200 cursor-pointer"
-                            >
-                                {title}
-                            </div>
-                        );
-                    })}
-                </div>}
+                <AnimatePresence>
+                    {toggleChats && chatsLoading && (
+                        <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="flex flex-col gap-2 pl-5 pr-5 overflow-hidden"
+                        >
+                            {[...Array(20)].map((_, i) => (
+                                <div key={i} className="h-5 pt-2 w-full bg-stone-200 rounded animate-pulse" />
+                            ))}
+                        </motion.div>
+                    )}
+                    {toggleChats && !chatsLoading && chats && (
+                        <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="overflow-hidden"
+                        >
+                            {chats.map((c, ind) => {
+                                const isStreaming = streamingTitle?.chatId === c.id;
+                                const title = isStreaming
+                                    ? (displayedTitle || "...")
+                                    : c.title;
+                                return (
+                                    <div
+                                        key={`${ind}`}
+                                        onClick={() => setChat({ id: c.id, title: c.title })}
+                                        className="text-black handlee-regular pl-5 pt-2 line-clamp-1 hover:bg-stone-200 cursor-pointer"
+                                    >
+                                        {title}
+                                    </div>
+                                );
+                            })}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
             <div className="text-black bg-white h-16 bottom-0 left-0 absolute w-full flex items-center justify-between px-3 border border-t border-stone-100 shadow-xl">
                 <div className="flex items-center">

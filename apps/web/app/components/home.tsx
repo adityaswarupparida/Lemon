@@ -1,4 +1,5 @@
 import { GiCutLemon } from "react-icons/gi";
+import { LemonAnimation } from "./ui/lemonAnimation";
 
 export const Home = () => {
     
@@ -32,20 +33,7 @@ export const Home = () => {
                         /> in New Chat.
                     </div>
                     <div className="flex gap-2 relative">
-                        <GiCutLemon
-                            className={`w-6 h-6 transition-all duration-300 text-amber-300 animate-squeeze`}
-                        />
-                        <>
-                            <div className="absolute top-4 left-2 animate-drop-1">
-                            <div className="w-1 h-1.5 bg-yellow-400 rounded-full opacity-80"></div>
-                            </div>
-                            <div className="absolute top-4 left-1 animate-drop-2">
-                            <div className="w-1 h-1.5 bg-yellow-400 rounded-full opacity-80"></div>
-                            </div>
-                            <div className="absolute top-4 left-3 animate-drop-3">
-                            <div className="w-0.75 h-1.25 bg-yellow-400 rounded-full opacity-80"></div>
-                            </div>
-                        </> 
+                       <LemonAnimation size="sm" />
                        Squeezed a chat earlier and want to finish it? Jump into <span className="">Your Chats</span> and continue from where you paused. 
                     </div>
                 </div>

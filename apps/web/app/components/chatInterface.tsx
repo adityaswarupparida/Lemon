@@ -1,5 +1,5 @@
 "use client"
-import { Dispatch, SetStateAction, useContext, useEffect, useRef, useState } from "react";
+import { Dispatch, SetStateAction, useContext, useEffect, useRef, useState, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
 import { Message, MessageBubble } from "./messageBubble";
 import { GiCutLemon } from "react-icons/gi";
@@ -8,6 +8,7 @@ import { useStreamingText } from "../hooks/useStreamingText";
 import { getMessages } from "../services/message";
 import { updateChatTitle } from "../services/chat";
 import { CiLogout } from "react-icons/ci";
+import { IoCopyOutline, IoRefresh } from "react-icons/io5";
 import { BACKEND_URL, getAuthTokenKey } from "../services/config";
 import { ChatItem } from "../types";
 import { ChatContext } from "../providers/chatContext";
@@ -29,7 +30,46 @@ export const ChatInterface = ({ chat, setChat }: {
     const fullMessageRef = useRef("");
     const lastRequestRef = useRef<string>("");
     const [token, setToken] = useState<string | null>(null);
+    const [copied, setCopied] = useState(false);
     const { displayedText, addChunk, reset } = useStreamingText(6);
+
+    const getLastAssistantMessage = useCallback(() => {
+        for (let i = messages.length - 1; i >= 0; i--) {
+            if (messages[i]?.role === "assistant") return messages[i];
+        }
+        return null;
+    }, [messages]);
+
+    const handleCopy = async () => {
+        const lastAssistant = getLastAssistantMessage();
+        if (!lastAssistant) return;
+        await navigator.clipboard.writeText(lastAssistant.content);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
+
+    const handleRegenerate = async () => {
+        if (isStreaming || messages.length < 2) return;
+        // Find last user message
+        let lastUserMsg = "";
+        for (let i = messages.length - 1; i >= 0; i--) {
+            const msg = messages[i];
+            if (msg?.role === "user") {
+                lastUserMsg = msg.content;
+                break;
+            }
+        }
+        if (!lastUserMsg) return;
+        // Remove last assistant message
+        setMessages(prev => {
+            const newMsgs = [...prev];
+            if (newMsgs[newMsgs.length - 1]?.role === "assistant") {
+                newMsgs.pop();
+            }
+            return newMsgs;
+        });
+        await sendMessage(lastUserMsg, true);
+    };
 
     useEffect(() => {
         let token = localStorage.getItem(getAuthTokenKey());
@@ -221,7 +261,7 @@ export const ChatInterface = ({ chat, setChat }: {
                     {loading && (
                         <div className="flex flex-col items-start mt-2">
                             <GiCutLemon
-                                className={`w-12 h-12 transition-all duration-300 text-amber-300 animate-squeeze`}
+                                className={`w-10 h-10 transition-all duration-300 text-amber-300 animate-squeeze`}
                             />
                         </div>
                     )}
@@ -232,17 +272,38 @@ export const ChatInterface = ({ chat, setChat }: {
                                 <ReactMarkdown>{displayedText}</ReactMarkdown>
                             </div>
                             <div className="flex items-center mt-1">
-                                <LemonAnimation />
+                                <LemonAnimation size="lg"/>
                             </div>
                         </div>
                     )}
 
-                    {displayedText === "" && 
+                    {displayedText === "" &&
                         !loading && !error && (
                         <div className="flex flex-col items-start mt-2">
-                            <div className="flex items-center mt-1 mb-8">
+                            {getLastAssistantMessage() && (
+                                <div className="flex items-center gap-2 mb-2">
+                                    <button
+                                        onClick={handleCopy}
+                                        className="flex items-center gap-1 text-stone-400 hover:text-amber-500 transition-colors cursor-pointer"
+                                        title="Copy response"
+                                    >
+                                        <IoCopyOutline size={18} />
+                                        <span className="text-sm">{copied ? "Copied!" : "Copy"}</span>
+                                    </button>
+                                    <button
+                                        onClick={handleRegenerate}
+                                        disabled={isStreaming}
+                                        className="flex items-center gap-1 text-stone-400 hover:text-amber-500 transition-colors disabled:opacity-50 cursor-pointer"
+                                        title="Regenerate response"
+                                    >
+                                        <IoRefresh size={18} />
+                                        <span className="text-sm">Regenerate</span>
+                                    </button>
+                                </div>
+                            )}
+                            <div className="flex items-center mt-2 mb-8">
                                 <GiCutLemon
-                                    className={`w-12 h-12 transition-all duration-300 text-amber-300`}
+                                    className={`w-10 h-10 transition-all duration-300 text-amber-300`}
                                 />
                             </div>
                         </div>

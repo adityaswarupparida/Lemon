@@ -2,7 +2,8 @@
 import { GiCutLemon } from "react-icons/gi";
 import { AiOutlineWechat } from "react-icons/ai";
 import { GoSearch } from "react-icons/go";
-import { IoIosArrowDown, IoIosLogOut } from "react-icons/io";
+import { IoIosArrowDown } from "react-icons/io";
+import { IoSettingsOutline, IoLogOutOutline } from "react-icons/io5";
 import { useContext, useEffect, useRef, useState } from "react";
 import { createNewChat, getChats } from "../services/chat";
 import { useRouter } from "next/navigation";
@@ -22,6 +23,7 @@ export const Sidebar = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [chatsLoading, setChatsLoading] = useState<boolean>(true);
     const [user, setUser] = useState<User>();
+    const [showUserMenu, setShowUserMenu] = useState(false);
 
     // Typing animation for streaming title
     const [displayedTitle, setDisplayedTitle] = useState("");
@@ -124,7 +126,10 @@ export const Sidebar = () => {
 
     return (
         <div className="min-w-60 w-60 bg-stone-50 hidden sm:block h-full overflow-hidden relative">
-            <div className="flex items-center justify-start gap-2 pl-2 pb-1 cursor-pointer">
+            <div
+                className="flex items-center justify-start gap-2 pl-2 pb-1 cursor-pointer"
+                onClick={() => setChat(null)}
+            >
                 <GiCutLemon fill="oklch(85.2% 0.199 91.936)" size={40} className="transition-all duration-300 text-amber-300 hover:animate-squeeze"/>
                 <span className="text-3xl pt-2 handlee-regular text-black">Lemon</span>
             </div>
@@ -193,19 +198,46 @@ export const Sidebar = () => {
                     )}
                 </AnimatePresence>
             </div>
-            <div className="text-black bg-white h-16 bottom-0 left-0 absolute w-full flex items-center justify-between px-3 border border-t border-stone-100 shadow-xl">
-                <div className="flex items-center">
-                    <div className="relative flex justify-center items-center">
-                        <div className="h-8 w-8 bg-amber-500  rounded-full"></div>
-                        <div className="absolute text-white">{getInitials(user?.firstName, user?.lastName)}</div>
+            <div className="text-black bg-white h-16 bottom-0 left-0 absolute w-full pl-3 pr-1 border border-t border-stone-100 shadow-xl">
+                <div className="relative h-full flex items-center">
+                    <div
+                        className="flex items-center cursor-pointer hover:bg-stone-100 rounded-lg p-2 -ml-2 flex-1"
+                        onClick={() => setShowUserMenu(prev => !prev)}
+                    >
+                        <div className="relative flex justify-center items-center">
+                            <div className="h-8 w-8 bg-amber-500 rounded-full"></div>
+                            <div className="absolute text-white">{getInitials(user?.firstName, user?.lastName)}</div>
+                        </div>
+                        <div className="truncate pl-2 handlee-regular flex flex-col items-start flex-1">
+                            <div className="text-md">{concatenate(user?.firstName, user?.lastName, " ")}</div>
+                            <div className="text-xs">{user?.email}</div>
+                        </div>
+                        <IoIosArrowDown className={`text-stone-400 transition-transform ${showUserMenu ? "rotate-180" : ""}`} />
                     </div>
-                    <div className="truncate pl-2 handlee-regular flex flex-col items-start">
-                        <div className="text-md">{concatenate(user?.firstName, user?.lastName, " ")}</div>
-                        <div className="text-xs">{user?.email}</div>
-                    </div>
-                </div>
-                <div onClick={handleLogout}>
-                    <IoIosLogOut className="text-3xl text-stone-300 hover:text-red-500 cursor-pointer" />
+
+                    <AnimatePresence>
+                        {showUserMenu && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: 10 }}
+                                transition={{ duration: 0.15 }}
+                                className="absolute bottom-full left-0 w-full mb-2 bg-white rounded-lg shadow-lg border border-stone-200 overflow-hidden"
+                            >
+                                {/* <div className="flex items-center gap-2 px-3 py-2 hover:bg-stone-100 cursor-pointer">
+                                    <IoSettingsOutline className="text-lg text-stone-500" />
+                                    <span className="handlee-regular">Settings</span>
+                                </div> */}
+                                <div
+                                    className="flex items-center gap-2 px-3 py-2 hover:bg-red-50 cursor-pointer text-red-500"
+                                    onClick={handleLogout}
+                                >
+                                    <IoLogOutOutline className="text-lg" />
+                                    <span className="handlee-regular">Logout</span>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
             </div>
         </div>

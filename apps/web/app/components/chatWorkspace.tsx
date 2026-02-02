@@ -46,7 +46,7 @@ export const ChatWorkspace = () => {
     return (
         <>
             <Sidebar />
-            {chat && <ChatInterface chat={chat} setChat={setChat} />}
+            {chat && <ChatInterface chat={chat} />}
             {!chat && <Home />}
         </>
     )

@@ -1,5 +1,5 @@
 "use client"
-import { Dispatch, SetStateAction, useContext, useEffect, useRef, useState, useCallback } from "react";
+import { useContext, useEffect, useRef, useState, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
 import { Message, MessageBubble } from "./messageBubble";
 import { GiCutLemon } from "react-icons/gi";
@@ -7,16 +7,12 @@ import { LemonAnimation } from "./ui/lemonAnimation";
 import { useStreamingText } from "../hooks/useStreamingText";
 import { getMessages } from "../services/message";
 import { updateChatTitle } from "../services/chat";
-import { CiLogout } from "react-icons/ci";
 import { IoCopyOutline, IoRefresh } from "react-icons/io5";
 import { BACKEND_URL, getAuthTokenKey } from "../services/config";
 import { ChatItem } from "../types";
 import { ChatContext } from "../providers/chatContext";
 
-export const ChatInterface = ({ chat, setChat }: {
-    chat: ChatItem | null,
-    setChat: Dispatch<SetStateAction<ChatItem | null>>
-}) => {
+export const ChatInterface = ({ chat }: { chat: ChatItem | null }) => {
     const context = useContext(ChatContext);
     const { updateChatTitleInList, setStreamingTitle } = context!;
 
@@ -240,14 +236,8 @@ export const ChatInterface = ({ chat, setChat }: {
 
     return (
         <div className="flex flex-col flex-1 h-full handlee-regular selection:bg-yellow-100">
-            <div className="h-12 max-w-full flex justify-between items-center px-2 bg-stone-50">
-                <div className="text-black"></div>
-                <div className="flex items-center gap-3">
-                    <CiLogout className="text-black hover:text-amber-400 text-3xl hover:cursor-pointer"
-                        onClick={() => setChat(null)}
-                    />
-                    <button className="bg-yellow-400 text-black w-20 h-4/5 py-2 px-4 rounded-lg cursor-pointer hover:bg-amber-300">Share</button>
-                </div>
+            <div className="h-12 max-w-full flex justify-end items-center px-4 bg-stone-50">
+                <button className="bg-yellow-400 text-black py-2 px-4 rounded-lg cursor-pointer hover:bg-amber-300">Share</button>
             </div>
             <div className="bg-white flex flex-col flex-1 overflow-hidden">
                 <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white

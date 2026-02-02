@@ -271,31 +271,34 @@ export const ChatInterface = ({ chat }: { chat: ChatItem | null }) => {
                         !loading && !error && (
                         <div className="flex flex-col items-start mt-2">
                             {getLastAssistantMessage() && (
-                                <div className="flex items-center gap-2 mb-2">
-                                    <button
-                                        onClick={handleCopy}
-                                        className="flex items-center gap-1 text-stone-400 hover:text-amber-500 transition-colors cursor-pointer"
-                                        title="Copy response"
-                                    >
-                                        <IoCopyOutline size={18} />
-                                        <span className="text-sm">{copied ? "Copied!" : "Copy"}</span>
-                                    </button>
-                                    <button
-                                        onClick={handleRegenerate}
-                                        disabled={isStreaming}
-                                        className="flex items-center gap-1 text-stone-400 hover:text-amber-500 transition-colors disabled:opacity-50 cursor-pointer"
-                                        title="Regenerate response"
-                                    >
-                                        <IoRefresh size={18} />
-                                        <span className="text-sm">Regenerate</span>
-                                    </button>
-                                </div>
+                                <>
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <button
+                                            onClick={handleCopy}
+                                            className="flex items-center gap-1 text-stone-400 hover:text-amber-500 transition-colors cursor-pointer"
+                                            title="Copy response"
+                                        >
+                                            <IoCopyOutline size={18} />
+                                            <span className="text-sm">{copied ? "Copied!" : "Copy"}</span>
+                                        </button>
+                                        <button
+                                            onClick={handleRegenerate}
+                                            disabled={isStreaming}
+                                            className="flex items-center gap-1 text-stone-400 hover:text-amber-500 transition-colors disabled:opacity-50 cursor-pointer"
+                                            title="Regenerate response"
+                                        >
+                                            <IoRefresh size={18} />
+                                            <span className="text-sm">Regenerate</span>
+                                        </button>
+                                    </div>
+                                    <div className="flex items-center mt-2 mb-8">
+                                        <GiCutLemon
+                                            className={`w-10 h-10 transition-all duration-300 text-amber-300`}
+                                        />
+                                    </div>
+                                </>
                             )}
-                            <div className="flex items-center mt-2 mb-8">
-                                <GiCutLemon
-                                    className={`w-10 h-10 transition-all duration-300 text-amber-300`}
-                                />
-                            </div>
+
                         </div>
                     )}
 
@@ -336,7 +339,7 @@ export const ChatInterface = ({ chat }: { chat: ChatItem | null }) => {
                             onClick={handleClick}
                             disabled={isStreaming || !input.trim()}
                         >
-                            {isStreaming ? "..." : "Send"}
+                            {isStreaming ? "Stop" : "Send"}
                         </button>
                     </div>
                 </div>

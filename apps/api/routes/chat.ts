@@ -148,6 +148,65 @@ router.patch("/:id/share", async (req, res) => {
     });
 });
 
+router.get("/search", async (req, res) => {
+    const userId = req.userId;
+
+    if (!userId) {
+        res.status(401).json({ message: "Not Authorized" });
+        return;
+    }
+
+    const query = req.query.q as string;
+    if (!query || query.trim().length < 2) {
+        res.status(400).json({ message: "Search query must be at least 2 characters" });
+        return;
+    }
+
+    try {
+        // Search messages containing the query in user's chats
+        const messages = await prisma.message.findMany({
+            where: {
+                content: { contains: query, mode: "insensitive" },
+                chat: { userId }
+            },
+            select: {
+                content: true,
+                chat: { select: { id: true, title: true } }
+            },
+            orderBy: { createdAt: "desc" },
+            take: 20
+        });
+
+        // Group by chat and get first matching snippet
+        const chatMap = new Map<string, { chatId: string; title: string; snippet: string }>();
+
+        for (const msg of messages) {
+            if (!chatMap.has(msg.chat.id)) {
+                // Extract snippet around the match
+                const lowerContent = msg.content.toLowerCase();
+                const lowerQuery = query.toLowerCase();
+                const matchIndex = lowerContent.indexOf(lowerQuery);
+                const start = Math.max(0, matchIndex - 30);
+                const end = Math.min(msg.content.length, matchIndex + query.length + 60);
+                const snippet = (start > 0 ? "..." : "") +
+                    msg.content.slice(start, end) +
+                    (end < msg.content.length ? "..." : "");
+
+                chatMap.set(msg.chat.id, {
+                    chatId: msg.chat.id,
+                    title: msg.chat.title,
+                    snippet
+                });
+            }
+        }
+
+        res.json({ results: Array.from(chatMap.values()) });
+    } catch (error) {
+        console.error("Search error:", error);
+        res.status(500).json({ message: "Search failed" });
+    }
+});
+
 router.delete("/:id", async (req, res) => {
     const userId = req.userId;
 

@@ -13,6 +13,7 @@ import { concatenate, getInitials } from "../utils";
 import { ChatContext } from "../providers/chatContext";
 import { getAuthTokenKey } from "../services/config";
 import { motion, AnimatePresence } from "framer-motion";
+import { SearchModal } from "./ui/searchModal";
 
 export const Sidebar = () => {
     const router = useRouter();
@@ -24,6 +25,7 @@ export const Sidebar = () => {
     const [chatsLoading, setChatsLoading] = useState<boolean>(true);
     const [user, setUser] = useState<User>();
     const [showUserMenu, setShowUserMenu] = useState(false);
+    const [showSearch, setShowSearch] = useState(false);
 
     // Typing animation for streaming title
     const [displayedTitle, setDisplayedTitle] = useState("");
@@ -140,7 +142,10 @@ export const Sidebar = () => {
                     <AiOutlineWechat fill="oklch(85.2% 0.199 91.936)" size={30} />
                     <span className="text-lg pt-2 pl-2 handlee-regular text-black">New chat</span>
                 </div>
-                <div className="flex items-center justify-start gap-2 pl-3 hover:bg-stone-200 cursor-pointer">
+                <div
+                    className="flex items-center justify-start gap-2 pl-3 hover:bg-stone-200 cursor-pointer"
+                    onClick={() => setShowSearch(true)}
+                >
                     <GoSearch fill="oklch(85.2% 0.199 91.936)" size={30} />
                     <span className="text-lg pt-2 pl-2 handlee-regular text-black">Search chats</span>
                 </div>
@@ -240,6 +245,12 @@ export const Sidebar = () => {
                     </AnimatePresence>
                 </div>
             </div>
+
+            <SearchModal
+                isOpen={showSearch}
+                onClose={() => setShowSearch(false)}
+                onSelectChat={(chatId, title) => setChat({ id: chatId, title })}
+            />
         </div>
     );
 }

@@ -121,7 +121,7 @@ export default function SharedChatPage() {
                             </div>
                         ) : (
                             <div className="flex items-start gap-3">
-                                <GiCutLemon className="w-8 h-8 text-amber-300 flex-shrink-0 mt-1" />
+                                <GiCutLemon className="w-8 h-8 text-amber-300 shrink-0 mt-1" />
                                 <div className="prose max-w-none text-black handlee-regular">
                                     <ReactMarkdown>{msg.content}</ReactMarkdown>
                                 </div>

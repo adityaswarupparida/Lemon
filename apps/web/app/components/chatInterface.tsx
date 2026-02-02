@@ -11,6 +11,7 @@ import { IoCopyOutline, IoRefresh } from "react-icons/io5";
 import { BACKEND_URL, getAuthTokenKey } from "../services/config";
 import { ChatItem } from "../types";
 import { ChatContext } from "../providers/chatContext";
+import { ShareModal } from "./ui/shareModal";
 
 export const ChatInterface = ({ chat }: { chat: ChatItem | null }) => {
     const context = useContext(ChatContext);
@@ -27,6 +28,7 @@ export const ChatInterface = ({ chat }: { chat: ChatItem | null }) => {
     const lastRequestRef = useRef<string>("");
     const [token, setToken] = useState<string | null>(null);
     const [copied, setCopied] = useState(false);
+    const [showShareModal, setShowShareModal] = useState(false);
     const { displayedText, addChunk, reset } = useStreamingText(6);
 
     const getLastAssistantMessage = useCallback(() => {
@@ -237,7 +239,12 @@ export const ChatInterface = ({ chat }: { chat: ChatItem | null }) => {
     return (
         <div className="flex flex-col flex-1 h-full handlee-regular selection:bg-yellow-100">
             <div className="h-12 max-w-full flex justify-end items-center px-4 bg-stone-50">
-                <button className="bg-yellow-400 text-black py-2 px-4 rounded-lg cursor-pointer hover:bg-amber-300">Share</button>
+                <button
+                    className="bg-yellow-400 text-black py-2 px-4 rounded-lg cursor-pointer hover:bg-amber-300"
+                    onClick={() => setShowShareModal(true)}
+                >
+                    Share
+                </button>
             </div>
             <div className="bg-white flex flex-col flex-1 overflow-hidden">
                 <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white
@@ -344,6 +351,13 @@ export const ChatInterface = ({ chat }: { chat: ChatItem | null }) => {
                     </div>
                 </div>
             </div>
+
+            <ShareModal
+                isOpen={showShareModal}
+                onClose={() => setShowShareModal(false)}
+                chatId={chat?.id || ""}
+                chatTitle={chat?.title || ""}
+            />
         </div>
     );
 }

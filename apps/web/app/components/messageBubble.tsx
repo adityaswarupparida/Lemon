@@ -11,7 +11,7 @@ export const MessageBubble = ({ message, loading } : { message: Message, loading
         <div className="mt-2">
             {message.role == `user` && (
                 <div className={`flex justify-end items-center`}>
-                    <div className={`${message.role == "user" ? `bg-amber-100 px-3 py-2 rounded prose` : ``}`}>
+                    <div className={`${message.role == "user" ? `bg-amber-100 px-3 py-2 rounded prose selection:bg-white!` : ``}`}>
                         {message.content}
                     </div>
                 </div>

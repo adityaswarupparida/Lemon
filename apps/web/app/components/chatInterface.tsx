@@ -24,6 +24,8 @@ export const ChatInterface = ({ chat }: { chat: ChatItem | null }) => {
     const [streamingComplete, setStreamingComplete] = useState(false);
     const [error, setError] = useState<{ message: string; type: string } | null>(null);
     const containerRef = useRef<HTMLDivElement | null>(null);
+    const scrollAnchorRef = useRef<HTMLDivElement | null>(null);
+    const scrollRAFRef = useRef<number | null>(null);
     const fullMessageRef = useRef("");
     const lastRequestRef = useRef<string>("");
     const [token, setToken] = useState<string | null>(null);
@@ -232,9 +234,41 @@ export const ChatInterface = ({ chat }: { chat: ChatItem | null }) => {
         }
     }, [streamingComplete, displayedText, reset]);
 
+    // Scroll to bottom using anchor element
+    const scrollToBottom = useCallback((smooth = false) => {
+        const container = containerRef.current;
+        const anchor = scrollAnchorRef.current;
+        if (!container || !anchor) return;
+
+        const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 150;
+        if (isNearBottom) {
+            anchor.scrollIntoView({ behavior: smooth ? 'smooth' : 'instant', block: 'end' });
+        }
+    }, []);
+
+    // Scroll on new messages/errors
     useEffect(() => {
-        containerRef.current?.scrollTo(0, containerRef.current.scrollHeight);
-    }, [messages, displayedText, error]);
+        scrollToBottom(true);
+    }, [messages, error, scrollToBottom]);
+
+    // Throttled scroll during streaming using RAF - only when content overflows
+    useEffect(() => {
+        if (!displayedText || !isStreaming) return;
+
+        if (scrollRAFRef.current) {
+            cancelAnimationFrame(scrollRAFRef.current);
+        }
+
+        scrollRAFRef.current = requestAnimationFrame(() => {
+            scrollToBottom(false);
+        });
+
+        return () => {
+            if (scrollRAFRef.current) {
+                cancelAnimationFrame(scrollRAFRef.current);
+            }
+        };
+    }, [displayedText, isStreaming, scrollToBottom]);
 
     return (
         <div className="flex flex-col flex-1 h-full handlee-regular selection:bg-yellow-100">
@@ -248,7 +282,7 @@ export const ChatInterface = ({ chat }: { chat: ChatItem | null }) => {
             </div>
             <div className="bg-white flex flex-col flex-1 overflow-hidden">
                 <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white
-                    [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-amber-200 px-40 text-black" ref={containerRef}>
+                    [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-amber-200 px-40 text-black [overflow-anchor:none]" ref={containerRef}>
                     {messages.map((msg, index) => (
                         <div key={`${index}`}>
                             <MessageBubble key={msg.id} message={msg} loading={false} />
@@ -329,6 +363,9 @@ export const ChatInterface = ({ chat }: { chat: ChatItem | null }) => {
                             </button>
                         </div>
                     )}
+
+                    {/* Scroll anchor */}
+                    <div ref={scrollAnchorRef} className="h-px" />
                 </div>
                 <div className="px-40 my-3 rounded-3xl">
                     <div className="h-14 flex items-center px-1 gap-2 bg-stone-100 rounded-3xl">

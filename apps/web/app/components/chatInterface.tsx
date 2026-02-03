@@ -21,16 +21,20 @@ export const ChatInterface = ({ chat }: { chat: ChatItem | null }) => {
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
     const [isStreaming, setIsStreaming] = useState(false);
-    const [streamingComplete, setStreamingComplete] = useState(false);
+    const [streamingComplete, setStreamingComplete] = useState(true);
     const [error, setError] = useState<{ message: string; type: string } | null>(null);
     const containerRef = useRef<HTMLDivElement | null>(null);
     const scrollAnchorRef = useRef<HTMLDivElement | null>(null);
     const scrollRAFRef = useRef<number | null>(null);
+    const lastUserMsgRef = useRef<HTMLDivElement | null>(null);
+    const responseContentRef = useRef<HTMLDivElement | null>(null);
+    const isLongResponseRef = useRef(false);
     const fullMessageRef = useRef("");
     const lastRequestRef = useRef<string>("");
     const [token, setToken] = useState<string | null>(null);
     const [copied, setCopied] = useState(false);
     const [showShareModal, setShowShareModal] = useState(false);
+    const [remainingSpace, setRemainingSpace] = useState(0);
     const { displayedText, addChunk, reset } = useStreamingText(6);
 
     const getLastAssistantMessage = useCallback(() => {
@@ -96,6 +100,8 @@ export const ChatInterface = ({ chat }: { chat: ChatItem | null }) => {
 
         // Add user message only if not a retry
         if (!isRetry) {
+            setRemainingSpace(0); // Reset for new message
+            isLongResponseRef.current = false;
             setMessages((prev) => [
                 ...prev,
                 {
@@ -104,6 +110,19 @@ export const ChatInterface = ({ chat }: { chat: ChatItem | null }) => {
                     id: (prev[prev.length - 1]?.id ?? -1) + 1
                 }
             ]);
+            // Scroll user message to top after DOM updates
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    const container = containerRef.current;
+                    const userMsg = lastUserMsgRef.current;
+                    if (container && userMsg) {
+                        container.scrollTo({
+                            top: userMsg.offsetTop,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
         }
 
         setInput("");
@@ -213,6 +232,16 @@ export const ChatInterface = ({ chat }: { chat: ChatItem | null }) => {
                 role: msg.role.toLowerCase()
             }))
             setMessages(msgs);
+
+            // Scroll to bottom after messages load
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    const container = containerRef.current;
+                    if (container) {
+                        container.scrollTop = container.scrollHeight;
+                    }
+                });
+            });
         })()
 
     }, [chat, token]);
@@ -220,6 +249,20 @@ export const ChatInterface = ({ chat }: { chat: ChatItem | null }) => {
     // When typing catches up to the full message, add to messages
     useEffect(() => {
         if (streamingComplete && displayedText.length >= fullMessageRef.current.length && fullMessageRef.current.length > 0) {
+            // Calculate remaining space for short responses BEFORE removing streaming content
+            const container = containerRef.current;
+            const responseContent = responseContentRef.current;
+            let calculatedSpace = 0;
+
+            if (!isLongResponseRef.current && container && responseContent) {
+                const viewportHeight = container.clientHeight;
+                const responseHeight = responseContent.offsetHeight;
+                const userMsgHeight = lastUserMsgRef.current?.offsetHeight ?? 0;
+                const buttonsHeight = -10; // approximate height for copy/regenerate/lemon
+                const totalContentHeight = userMsgHeight + responseHeight + buttonsHeight;
+                calculatedSpace = Math.max(0, viewportHeight - totalContentHeight);
+            }
+
             setMessages((prev) => [
                 ...prev,
                 {
@@ -231,6 +274,7 @@ export const ChatInterface = ({ chat }: { chat: ChatItem | null }) => {
             reset();
             setStreamingComplete(false);
             setIsStreaming(false);
+            setRemainingSpace(calculatedSpace);
         }
     }, [streamingComplete, displayedText, reset]);
 
@@ -246,12 +290,12 @@ export const ChatInterface = ({ chat }: { chat: ChatItem | null }) => {
         }
     }, []);
 
-    // Scroll on new messages/errors
+    // Scroll on errors
     useEffect(() => {
-        scrollToBottom(true);
-    }, [messages, error, scrollToBottom]);
+        if (error) scrollToBottom(true);
+    }, [error, scrollToBottom]);
 
-    // Throttled scroll during streaming using RAF - only when content overflows
+    // Throttled scroll during streaming using RAF
     useEffect(() => {
         if (!displayedText || !isStreaming) return;
 
@@ -260,6 +304,16 @@ export const ChatInterface = ({ chat }: { chat: ChatItem | null }) => {
         }
 
         scrollRAFRef.current = requestAnimationFrame(() => {
+            // Track if response content exceeds viewport (long response)
+            const container = containerRef.current;
+            const responseContent = responseContentRef.current;
+            if (container && responseContent) {
+                const responseHeight = responseContent.offsetHeight;
+                const viewportHeight = container.clientHeight;
+                if (responseHeight > viewportHeight - 150) {
+                    isLongResponseRef.current = true;
+                }
+            }
             scrollToBottom(false);
         });
 
@@ -283,65 +337,74 @@ export const ChatInterface = ({ chat }: { chat: ChatItem | null }) => {
             <div className="bg-white flex flex-col flex-1 overflow-hidden">
                 <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white
                     [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-amber-200 px-40 text-black [overflow-anchor:none]" ref={containerRef}>
-                    {messages.map((msg, index) => (
-                        <div key={`${index}`}>
-                            <MessageBubble key={msg.id} message={msg} loading={false} />
-                        </div>
-                    ))}
-
-                    {loading && (
-                        <div className="flex flex-col items-start mt-2">
-                            <GiCutLemon
-                                className={`w-10 h-10 transition-all duration-300 text-amber-300 animate-squeeze`}
-                            />
-                        </div>
-                    )}
-
-                    {displayedText !== "" && (
-                        <div className="flex flex-col items-start mt-2">
-                            <div className="prose">
-                                <ReactMarkdown>{displayedText}</ReactMarkdown>
+                    {messages.map((msg, index) => {
+                        const isLastUserMsg = msg.role === 'user' && index === messages.length - 1;
+                        return (
+                            <div key={`${index}`} ref={isLastUserMsg ? lastUserMsgRef : null}>
+                                <MessageBubble key={msg.id} message={msg} loading={false} />
                             </div>
-                            <div className="flex items-center mt-1">
-                                <LemonAnimation size="lg"/>
+                        );
+                    })}
+
+                    {/* Response area - always rendered to prevent jump */}
+                    <div
+                        className={`flex flex-col ${(loading || isStreaming) ? 'min-h-[70vh]' : ''}`}
+                        style={!loading && !isStreaming && remainingSpace > 0 ? { minHeight: remainingSpace } : undefined}
+                    >
+                        {/* Loading state */}
+                        {loading && (
+                            <div className="flex flex-col items-start mt-2">
+                                <GiCutLemon
+                                    className={`w-10 h-10 transition-all duration-300 text-amber-300 animate-squeeze`}
+                                />
                             </div>
-                        </div>
-                    )}
+                        )}
 
-                    {displayedText === "" &&
-                        !loading && !error && (
-                        <div className="flex flex-col items-start mt-2">
-                            {getLastAssistantMessage() && (
-                                <>
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <button
-                                            onClick={handleCopy}
-                                            className="flex items-center gap-1 text-stone-400 hover:text-amber-500 transition-colors cursor-pointer"
-                                            title="Copy response"
-                                        >
-                                            <IoCopyOutline size={18} />
-                                            <span className="text-sm">{copied ? "Copied!" : "Copy"}</span>
-                                        </button>
-                                        <button
-                                            onClick={handleRegenerate}
-                                            disabled={isStreaming}
-                                            className="flex items-center gap-1 text-stone-400 hover:text-amber-500 transition-colors disabled:opacity-50 cursor-pointer"
-                                            title="Regenerate response"
-                                        >
-                                            <IoRefresh size={18} />
-                                            <span className="text-sm">Regenerate</span>
-                                        </button>
-                                    </div>
-                                    <div className="flex items-center mt-2 mb-8">
-                                        <GiCutLemon
-                                            className={`w-10 h-10 transition-all duration-300 text-amber-300`}
-                                        />
-                                    </div>
-                                </>
-                            )}
+                        {/* Streaming response */}
+                        {displayedText !== "" && (
+                            <div ref={responseContentRef} className="flex flex-col items-start mt-2">
+                                <div className="prose">
+                                    <ReactMarkdown>{displayedText}</ReactMarkdown>
+                                </div>
+                                <div className="flex items-center mt-2 mb-8">
+                                    <LemonAnimation size="lg"/>
+                                </div>
+                            </div>
+                        )}
 
-                        </div>
-                    )}
+                        {/* Idle state - copy/regenerate buttons */}
+                        {displayedText === "" && !loading && !error && streamingComplete && getLastAssistantMessage() && (
+                            <div className="flex flex-col items-start mt-2">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <button
+                                        onClick={handleCopy}
+                                        className="flex items-center gap-1 text-stone-400 hover:text-amber-500 transition-colors cursor-pointer"
+                                        title="Copy response"
+                                    >
+                                        <IoCopyOutline size={18} />
+                                        <span className="text-sm">{copied ? "Copied!" : "Copy"}</span>
+                                    </button>
+                                    <button
+                                        onClick={handleRegenerate}
+                                        disabled={isStreaming}
+                                        className="flex items-center gap-1 text-stone-400 hover:text-amber-500 transition-colors disabled:opacity-50 cursor-pointer"
+                                        title="Regenerate response"
+                                    >
+                                        <IoRefresh size={18} />
+                                        <span className="text-sm">Regenerate</span>
+                                    </button>
+                                </div>
+                                <div className="flex items-center mt-2 mb-8">
+                                    <GiCutLemon
+                                        className={`w-10 h-10 transition-all duration-300 text-amber-300`}
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Spacer always present - fills remaining space */}
+                        <div className="grow" />
+                    </div>
 
                     {error && (
                         <div className="flex flex-col items-start mt-4 p-4 bg-red-50/60 border border-red-400/60 rounded-lg max-w-xl">

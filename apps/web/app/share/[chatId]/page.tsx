@@ -22,7 +22,7 @@ type SharedChat = {
 
 export default function SharedChatPage() {
     const params = useParams();
-    const chatId = params.chatId as string;
+    const chatId = Array.isArray(params.chatId) ? params.chatId[0] : params.chatId;
 
     const [chat, setChat] = useState<SharedChat | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
@@ -35,7 +35,7 @@ export default function SharedChatPage() {
         setError(null);
         setChat(null);
         setMessages([]);
-        
+
         const fetchSharedChat = async () => {
             try {
                 const response = await fetch(`${BACKEND_URL}/api/share/${chatId}`);
@@ -54,6 +54,7 @@ export default function SharedChatPage() {
                 setChat(data.chat);
                 setMessages(data.messages);
             } catch (err) {
+                console.error('Failed to load shared chat:', err);
                 setError("Failed to load shared chat.");
             }
             setLoading(false);
@@ -73,11 +74,11 @@ export default function SharedChatPage() {
         );
     }
 
-    if (error) {
+    if (error || !chatId) {
         return (
             <div className="min-h-screen bg-white flex flex-col items-center justify-center gap-4">
                 <GiCutLemon className="w-16 h-16 text-amber-300" />
-                <p className="text-xl text-black handlee-regular">{error}</p>
+                <p className="text-xl text-black handlee-regular">{error ?? `Invalid chat link`}</p>
                 <Link
                     href="/signup"
                     className="mt-4 px-6 py-2 bg-amber-400 hover:bg-amber-500 text-black rounded-lg handlee-regular transition-colors"

@@ -23,15 +23,22 @@ export const ChatWorkspace = () => {
         }
 
         // Validate token with backend
-        getDetails(token).then((result) => {
-            if (result.user) {
-                setLoading(false);
-            } else {
-                // Token invalid/expired - remove and redirect
+        getDetails(token)
+            .then((result) => {
+                if (result.user) {
+                    setLoading(false);
+                } else {
+                    // Token invalid/expired - remove and redirect
+                    localStorage.removeItem(getAuthTokenKey());
+                    router.push("/signup");
+                }
+            })
+            .catch(() => {
+                // Network error - could retry or show error state
+                // For now, assume token invalid
                 localStorage.removeItem(getAuthTokenKey());
                 router.push("/signup");
-            }
-        });
+            });
     }, [ctx, router]);
 
    if (!ctx || loading) return (

@@ -43,6 +43,7 @@ const sizeConfig = {
 
 export const LemonAnimation = ({ size = "xl" }: { size?: LemonSize }) => {
     const config = sizeConfig[size];
+    const dropAnimationClasses = ["animate-drop-1", "animate-drop-2", "animate-drop-3"] as const;
 
     return (
         <div className="flex items-center justify-center">
@@ -52,7 +53,10 @@ export const LemonAnimation = ({ size = "xl" }: { size?: LemonSize }) => {
                 />
                 <>
                     {config.drops.map((drop, index) => (
-                        <div key={index} className={`absolute ${config.dropTop} ${drop.left} animate-drop-${index + 1}`}>
+                        <div
+                            key={index}
+                            className={`absolute ${config.dropTop} ${drop.left} ${dropAnimationClasses[index] ?? dropAnimationClasses[0]}`}
+                        >
                             <div className={`${drop.size} bg-yellow-400 rounded-full opacity-80`}></div>
                         </div>
                     ))}

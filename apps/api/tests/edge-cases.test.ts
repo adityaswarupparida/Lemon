@@ -132,7 +132,7 @@ describe("Edge Cases", () => {
         });
 
         test("message with unicode/emoji should work", async () => {
-            await prisma.message.create({
+            const msg = await prisma.message.create({
                 data: {
                     chatId: testChatId,
                     content: "Hello 世界! 🍋🔥 Special chars: <>&\"'",
@@ -148,6 +148,9 @@ describe("Edge Cases", () => {
             expect(response.status).toBe(200);
             const found = data.messages.find((m: any) => m.content.includes("🍋"));
             expect(found).toBeDefined();
+
+            // Cleanup
+            await prisma.message.delete({ where: { id: msg.id } });
         });
     });
 

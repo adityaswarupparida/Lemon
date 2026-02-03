@@ -45,11 +45,9 @@ describe('SearchModal Component', () => {
             />
         )
 
-        // Click the backdrop (first div with bg-black/50)
-        const backdrop = document.querySelector('.bg-black\\/50')
-        if (backdrop) {
-            fireEvent.click(backdrop)
-        }
+        // Click the backdrop
+        const backdrop = screen.getByTestId('modal-backdrop')
+        fireEvent.click(backdrop)
 
         expect(mockOnClose).toHaveBeenCalled()
     })

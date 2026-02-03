@@ -6,8 +6,11 @@ describe('LemonAnimation Component', () => {
     test('renders with default xl size', () => {
         const { container } = render(<LemonAnimation />)
 
-        // Check that the component renders
-        expect(container.querySelector('svg')).toBeTruthy()
+        const svg = container.querySelector('svg')
+        expect(svg).toBeTruthy()
+        // Verify default size is xl
+        expect(svg?.classList.contains('w-12')).toBe(true)
+        expect(svg?.classList.contains('h-12')).toBe(true)
     })
 
     test('renders with sm size', () => {
@@ -25,6 +28,7 @@ describe('LemonAnimation Component', () => {
         const svg = container.querySelector('svg')
         expect(svg).toBeTruthy()
         expect(svg?.classList.contains('w-8')).toBe(true)
+        expect(svg?.classList.contains('h-8')).toBe(true)    
     })
 
     test('renders with lg size', () => {
@@ -33,6 +37,7 @@ describe('LemonAnimation Component', () => {
         const svg = container.querySelector('svg')
         expect(svg).toBeTruthy()
         expect(svg?.classList.contains('w-10')).toBe(true)
+        expect(svg?.classList.contains('h-10')).toBe(true)
     })
 
     test('renders with xl size', () => {
@@ -41,6 +46,7 @@ describe('LemonAnimation Component', () => {
         const svg = container.querySelector('svg')
         expect(svg).toBeTruthy()
         expect(svg?.classList.contains('w-12')).toBe(true)
+        expect(svg?.classList.contains('h-12')).toBe(true)
     })
 
     test('renders juice drop animations', () => {

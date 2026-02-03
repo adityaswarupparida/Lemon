@@ -62,7 +62,7 @@ scrollRAFRef.current = requestAnimationFrame(() => {
     scrollToBottom(false);
 });
 ```
-This ensures max one scroll per frame (60fps).
+This ensures max one scroll per frame (60 fps).
 
 ## Refs vs State for Tracking
 Use refs (not state) for values that:

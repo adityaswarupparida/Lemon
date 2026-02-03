@@ -3,8 +3,9 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { GoSearch } from "react-icons/go";
 import { IoCloseOutline } from "react-icons/io5";
-import { searchChats, SearchResult } from "../../services/chat";
+import { searchChats } from "../../services/chat";
 import { getAuthTokenKey } from "../../services/config";
+import { SearchResult } from "../../types";
 
 type SearchModalProps = {
     isOpen: boolean;
@@ -41,11 +42,17 @@ export const SearchModal = ({ isOpen, onClose, onSelectChat }: SearchModalProps)
         setLoading(true);
         debounceRef.current = setTimeout(async () => {
             const token = localStorage.getItem(getAuthTokenKey());
-            if (!token) return;
+            if (!token) {
+                setLoading(false);
+                return;
+            }
 
-            const searchResults = await searchChats(query, token);
-            setResults(searchResults);
-            setLoading(false);
+            try {
+                const searchResults = await searchChats(query, token);
+                setResults(searchResults);
+            } finally {
+                setLoading(false);
+            }
         }, 300);
 
         return () => {
@@ -66,6 +73,7 @@ export const SearchModal = ({ isOpen, onClose, onSelectChat }: SearchModalProps)
                 <>
                     {/* Backdrop */}
                     <motion.div
+                        data-testid="modal-backdrop"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}

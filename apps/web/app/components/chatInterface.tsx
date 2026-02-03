@@ -47,9 +47,14 @@ export const ChatInterface = ({ chat }: { chat: ChatItem | null }) => {
     const handleCopy = async () => {
         const lastAssistant = getLastAssistantMessage();
         if (!lastAssistant) return;
-        await navigator.clipboard.writeText(lastAssistant.content);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+        try {
+            if (!navigator.clipboard) throw new Error("Clipboard API unavailable");
+            await navigator.clipboard.writeText(lastAssistant.content);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch {
+            setError({ message: "Failed to copy to clipboard.", type: "clipboard" });
+        }
     };
 
     const handleRegenerate = async () => {
@@ -169,7 +174,7 @@ export const ChatInterface = ({ chat }: { chat: ChatItem | null }) => {
                     // Check for error marker in stream
                     if (chunk.includes("[ERROR]")) {
                         const errorMatch = chunk.match(/\[ERROR\](.+)$/);
-                        if (errorMatch && typeof errorMatch == "string") {
+                        if (errorMatch && typeof errorMatch[1] === "string") {
                             try {
                                 const errorData = JSON.parse(errorMatch[1]);
                                 setError({ message: errorData.message, type: errorData.type });
@@ -329,7 +334,8 @@ export const ChatInterface = ({ chat }: { chat: ChatItem | null }) => {
             <div className="h-12 max-w-full flex justify-end items-center px-4 bg-stone-50">
                 <button
                     className="bg-yellow-400 text-black py-2 px-4 rounded-lg cursor-pointer hover:bg-amber-300"
-                    onClick={() => setShowShareModal(true)}
+                    onClick={() => chat && setShowShareModal(true)}
+                    disabled={!chat}
                 >
                     Share
                 </button>
@@ -452,7 +458,7 @@ export const ChatInterface = ({ chat }: { chat: ChatItem | null }) => {
             </div>
 
             <ShareModal
-                isOpen={showShareModal}
+                isOpen={showShareModal && !!chat}
                 onClose={() => setShowShareModal(false)}
                 chatId={chat?.id || ""}
                 chatTitle={chat?.title || ""}

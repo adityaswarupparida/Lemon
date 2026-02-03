@@ -307,13 +307,14 @@ describe("Edge Cases", () => {
         });
 
         test("signup with very short password should be handled", async () => {
+            const email = `short-pass-${Date.now()}@test.com`;
             const response = await fetch(`${BASE_URL}/api/user/signup`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     firstName: "Test",
                     lastName: "User",
-                    email: `short-pass-${Date.now()}@test.com`,
+                    email,
                     password: "a"
                 })
             });
@@ -323,8 +324,12 @@ describe("Edge Cases", () => {
 
             if (response.status === 201) {
                 // Cleanup
-                const { token } = await response.json();
-                // Delete user would require finding by token - skip for now
+               const user = await prisma.user.findUnique({ where: { email } });
+               if (user) {
+                   await prisma.message.deleteMany({ where: { chat: { userId: user.id } } });
+                   await prisma.chat.deleteMany({ where: { userId: user.id } });
+                   await prisma.user.delete({ where: { id: user.id } });
+               }
             }
         });
     });

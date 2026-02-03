@@ -1,3 +1,4 @@
+import { SearchResult } from "../types";
 import { BACKEND_URL } from "./config";
 
 export const getChats = async (token: string) => {
@@ -9,7 +10,6 @@ export const getChats = async (token: string) => {
     });
 
     const results = await response.json();
-    console.log(results);
     return results.chats;
 }
 
@@ -26,7 +26,6 @@ export const createNewChat = async (token: string) => {
     });
 
     const results = await response.json();
-    console.log(results);
     return results.chat;
 }
 
@@ -46,21 +45,23 @@ export const updateChatTitle = async (chatId: string, input: string, token: stri
     return results.title;
 }
 
-export type SearchResult = {
-    chatId: string;
-    title: string;
-    snippet: string;
-};
-
 export const searchChats = async (query: string, token: string): Promise<SearchResult[]> => {
-    const response = await fetch(`${BACKEND_URL}/api/chat/search?q=${encodeURIComponent(query)}`, {
-        method: "GET",
-        headers: {
-            "Authorization": `Bearer ${token}`
-        }
-    });
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/chat/search?q=${encodeURIComponent(query)}`, {
+            method: "GET",
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        });
 
-    if (!response.ok) return [];
-    const results = await response.json();
-    return results.results || [];
+        if (!response.ok) {
+            console.error(`Search failed with status: ${response.status}`);
+            return [];
+        }
+        const results = await response.json();
+        return results.results || [];
+   } catch (error) {
+       console.error('Search request failed:', error);
+       return [];
+   }
 }

@@ -23,6 +23,10 @@ describe('Utils', () => {
             expect(concatenate('a', 'b', '-')).toBe('a-b')
             expect(concatenate('a', 'b', '')).toBe('ab')
         })
+
+        test('should return empty string if first word is empty', () => {
+            expect(concatenate('', 'World', ' ')).toBe('')
+        })
     })
 
     describe('getInitials', () => {

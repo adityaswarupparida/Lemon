@@ -156,8 +156,8 @@ router.get("/search", async (req, res) => {
         return;
     }
 
-    const query = req.query.q as string;
-    if (!query || query.trim().length < 2) {
+    const query = (req.query.q as string | undefined)?.trim();
+    if (!query || query.length < 2) {
         res.status(400).json({ message: "Search query must be at least 2 characters" });
         return;
     }

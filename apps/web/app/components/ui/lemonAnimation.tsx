@@ -51,15 +51,11 @@ export const LemonAnimation = ({ size = "xl" }: { size?: LemonSize }) => {
                     className={`${config.icon} transition-all duration-300 text-amber-300 animate-squeeze`}
                 />
                 <>
-                    <div className={`absolute ${config.dropTop} ${config.drops[0]?.left} animate-drop-1`}>
-                        <div className={`${config.drops[0]?.size} bg-yellow-400 rounded-full opacity-80`}></div>
-                    </div>
-                    <div className={`absolute ${config.dropTop} ${config.drops[1]?.left} animate-drop-2`}>
-                        <div className={`${config.drops[1]?.size} bg-yellow-400 rounded-full opacity-80`}></div>
-                    </div>
-                    <div className={`absolute ${config.dropTop} ${config.drops[2]?.left} animate-drop-3`}>
-                        <div className={`${config.drops[2]?.size} bg-yellow-400 rounded-full opacity-80`}></div>
-                    </div>
+                    {config.drops.map((drop, index) => (
+                        <div key={index} className={`absolute ${config.dropTop} ${drop.left} animate-drop-${index + 1}`}>
+                            <div className={`${drop.size} bg-yellow-400 rounded-full opacity-80`}></div>
+                        </div>
+                    ))}
                 </>
             </div>
         </div>

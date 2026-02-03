@@ -30,6 +30,12 @@ export default function SharedChatPage() {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
+        if (!chatId) return;
+        setLoading(true);
+        setError(null);
+        setChat(null);
+        setMessages([]);
+        
         const fetchSharedChat = async () => {
             try {
                 const response = await fetch(`${BACKEND_URL}/api/share/${chatId}`);

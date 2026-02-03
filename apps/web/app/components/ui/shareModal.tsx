@@ -28,7 +28,10 @@ export const ShareModal = ({ isOpen, onClose, chatId, chatTitle }: ShareModalPro
         const fetchShareStatus = async () => {
             setLoading(true);
             const token = localStorage.getItem(getAuthTokenKey());
-            if (!token) return;
+            if (!token) {
+                setLoading(false);
+                return;
+            }
 
             try {
                 const response = await fetch(`${BACKEND_URL}/api/chat`, {
@@ -49,7 +52,10 @@ export const ShareModal = ({ isOpen, onClose, chatId, chatTitle }: ShareModalPro
     const handleToggle = async () => {
         setToggling(true);
         const token = localStorage.getItem(getAuthTokenKey());
-        if (!token) return;
+        if (!token) {
+            setToggling(false);
+            return;
+        }
 
         try {
             const response = await fetch(`${BACKEND_URL}/api/chat/${chatId}/share`, {
@@ -73,8 +79,12 @@ export const ShareModal = ({ isOpen, onClose, chatId, chatTitle }: ShareModalPro
     };
 
     const handleCopy = async () => {
-        await navigator.clipboard.writeText(shareUrl);
-        toast.success("Link copied to clipboard!");
+        try {
+            await navigator.clipboard.writeText(shareUrl);
+            toast.success("Link copied to clipboard!");
+        } catch (error) {
+            toast.error("Failed to copy link");
+        }
     };
 
     if (!isOpen) return null;
@@ -87,6 +97,7 @@ export const ShareModal = ({ isOpen, onClose, chatId, chatTitle }: ShareModalPro
 
                     {/* Backdrop */}
                     <motion.div
+                        data-testid="modal-backdrop"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
@@ -128,6 +139,7 @@ export const ShareModal = ({ isOpen, onClose, chatId, chatTitle }: ShareModalPro
                                             <p className="text-sm text-stone-400 handlee-regular">Shared chats are read-only</p>
                                         </div>
                                         <button
+                                            data-testid="share-toggle"
                                             onClick={handleToggle}
                                             disabled={toggling}
                                             className={`relative w-12 h-6 rounded-full transition-colors ${

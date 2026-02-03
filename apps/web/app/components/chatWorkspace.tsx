@@ -10,12 +10,12 @@ import { getDetails } from "../services/user";
 
 export const ChatWorkspace = () => {
     const ctx = useContext(ChatContext);
-    if (!ctx) return null;
-    const { chat, setChat } = ctx;
+
     const router = useRouter();
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        if (!ctx) return;
         const token = localStorage.getItem(getAuthTokenKey());
         if (!token) {
             router.push("/signup");
@@ -32,9 +32,9 @@ export const ChatWorkspace = () => {
                 router.push("/signup");
             }
         });
-    }, []);
+    }, [ctx, router]);
 
-    if (loading) return (
+   if (!ctx || loading) return (
         <div className="flex items-center justify-center w-full h-screen">
             <svg className="w-8 h-8 text-amber-400 animate-spin" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -42,6 +42,8 @@ export const ChatWorkspace = () => {
             </svg>
         </div>
     );
+
+    const { chat } = ctx;
 
     return (
         <>

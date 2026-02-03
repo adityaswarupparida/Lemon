@@ -212,5 +212,12 @@ describe("Cross-User Authorization", () => {
 
             expect(response.status).toBe(401);
         });
+
+        
+        test("should reject request without Authorization header", async () => {
+            const response = await fetch(`${BASE_URL}/api/chat`);
+
+            expect(response.status).toBe(401);
+        });
     });
 });

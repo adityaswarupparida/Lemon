@@ -101,9 +101,12 @@ export const Sidebar = () => {
         if (!token) return;
 
         (async () => {
-            const fetchedChats = await getChats(token);
-            setChats(fetchedChats);
-            setChatsLoading(false);
+            try {
+                const fetchedChats = await getChats(token);
+                setChats(fetchedChats);
+            } finally {
+                setChatsLoading(false);
+            }
         })();
 
         (async () => {
@@ -184,14 +187,14 @@ export const Sidebar = () => {
                             transition={{ duration: 0.2 }}
                             className="overflow-hidden"
                         >
-                            {chats.map((c, ind) => {
+                            {chats.map((c) => {
                                 const isStreaming = streamingTitle?.chatId === c.id;
                                 const title = isStreaming
                                     ? (displayedTitle || "...")
                                     : c.title;
                                 return (
                                     <div
-                                        key={`${ind}`}
+                                        key={c.id}
                                         onClick={() => setChat({ id: c.id, title: c.title })}
                                         className="text-black handlee-regular pl-5 pt-2 line-clamp-1 hover:bg-stone-200 cursor-pointer"
                                     >

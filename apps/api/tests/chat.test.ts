@@ -92,8 +92,22 @@ describe("Chat Routes", () => {
     });
 
     describe("PATCH /api/chat/:id/update-title", () => {
+        let updateTitleChatId: string;
+        beforeAll(async () => {
+            const createResponse = await fetch(`${BASE_URL}/api/chat`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${authToken}`
+                },
+                body: JSON.stringify({ title: "Update Title Test Chat" })
+            });
+            const { chat } = await createResponse.json();
+            updateTitleChatId = chat;
+        });
+
         test("should update chat title", async () => {
-            const response = await fetch(`${BASE_URL}/api/chat/${testChatId}/update-title`, {
+            const response = await fetch(`${BASE_URL}/api/chat/${updateTitleChatId}/update-title`, {
                 method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",
@@ -121,7 +135,7 @@ describe("Chat Routes", () => {
         });
 
         test("should fail without auth", async () => {
-            const response = await fetch(`${BASE_URL}/api/chat/${testChatId}/update-title`, {
+            const response = await fetch(`${BASE_URL}/api/chat/${updateTitleChatId}/update-title`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ input: "Test input" })

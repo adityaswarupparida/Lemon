@@ -8,3 +8,9 @@ export type ChatItem = {
     id: string;
     title: string
 }
+
+export type SearchResult = {
+    chatId: string;
+    title: string;
+    snippet: string;
+};

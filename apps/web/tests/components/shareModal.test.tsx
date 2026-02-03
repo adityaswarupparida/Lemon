@@ -39,10 +39,8 @@ describe('ShareModal Component', () => {
 
         render(<ShareModal {...defaultProps} />)
 
-        const backdrop = document.querySelector('.bg-black\\/50')
-        if (backdrop) {
-            fireEvent.click(backdrop)
-        }
+        const backdrop = screen.getByTestId('modal-backdrop')
+        fireEvent.click(backdrop)
 
         expect(mockOnClose).toHaveBeenCalled()
     })
@@ -95,10 +93,8 @@ describe('ShareModal Component', () => {
         })
 
         // Find and click the toggle button
-        const toggleButton = document.querySelector('button.relative.w-12')
-        if (toggleButton) {
-            fireEvent.click(toggleButton)
-        }
+        const toggleButton = screen.getByTestId('share-toggle')
+        fireEvent.click(toggleButton)
 
         await waitFor(() => {
             expect(global.fetch).toHaveBeenCalledTimes(2)

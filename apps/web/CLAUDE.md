@@ -50,9 +50,9 @@ if (!isLongResponseRef.current) {
 ```
 
 ## CSS Selection Specificity
-Tailwind's `selection:bg-*` classes have equal specificity. The one appearing later in the compiled CSS wins. Use `!` prefix for important override:
+Tailwind's `selection:bg-*` classes have equal specificity. The one appearing later in the compiled CSS wins. Use `!` suffix for important override:
 ```jsx
-className="selection:!bg-white"
+className="selection:bg-white!"
 ```
 
 ## RAF for Scroll Batching (Jitter Fix)

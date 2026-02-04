@@ -12,6 +12,7 @@ import { BACKEND_URL, getAuthTokenKey } from "../services/config";
 import { ChatItem } from "../types";
 import { ChatContext } from "../providers/chatContext";
 import { ShareModal } from "./ui/shareModal";
+import { CodeBlock } from "./ui/codeBlock";
 
 export const ChatInterface = ({ chat }: { chat: ChatItem | null }) => {
     const context = useContext(ChatContext);
@@ -331,9 +332,12 @@ export const ChatInterface = ({ chat }: { chat: ChatItem | null }) => {
 
     return (
         <div className="flex flex-col flex-1 h-full handlee-regular selection:bg-yellow-100">
-            <div className="h-12 max-w-full flex justify-end items-center px-4 bg-stone-50">
+            <div className="px-4 py-3 flex justify-between items-center bg-white border-b border-stone-200">
+                <h1 className="text-xl handlee-regular text-black truncate max-w-lg">
+                    {chat?.title || "New Chat"}
+                </h1>
                 <button
-                    className="bg-yellow-400 text-black py-2 px-4 rounded-lg cursor-pointer hover:bg-amber-300"
+                    className="px-5 py-1.5 bg-amber-300 hover:bg-amber-400 text-black rounded-lg cursor-pointer handlee-regular transition-colors"
                     onClick={() => chat && setShowShareModal(true)}
                     disabled={!chat}
                 >
@@ -369,8 +373,28 @@ export const ChatInterface = ({ chat }: { chat: ChatItem | null }) => {
                         {/* Streaming response */}
                         {displayedText !== "" && (
                             <div ref={responseContentRef} className="flex flex-col items-start mt-2">
-                                <div className="prose">
-                                    <ReactMarkdown>{displayedText}</ReactMarkdown>
+                                <div className="prose prose-stone">
+                                    <ReactMarkdown
+                                        components={{
+                                            code({ className, children, ...props }) {
+                                                const match = /language-(\w+)/.exec(className || '');
+                                                const codeString = String(children).replace(/\n$/, '');
+                                                if (match && match[1]) {
+                                                    return <CodeBlock language={match[1]} code={codeString} />;
+                                                }
+                                                return (
+                                                    <code className="bg-stone-100 text-stone-800 px-1.5 py-0.5 rounded text-sm font-mono" {...props}>
+                                                        {children}
+                                                    </code>
+                                                );
+                                            },
+                                            pre({ children }) {
+                                                return <>{children}</>;
+                                            }
+                                        }}
+                                    >
+                                        {displayedText}
+                                    </ReactMarkdown>
                                 </div>
                                 <div className="flex items-center mt-2 mb-8">
                                     <LemonAnimation size="lg"/>

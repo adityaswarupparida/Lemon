@@ -132,11 +132,11 @@ export const Sidebar = () => {
     return (
         <div className="min-w-60 w-60 bg-stone-50 hidden sm:block h-full overflow-hidden relative">
             <div
-                className="flex items-center justify-start gap-2 pl-2 pb-1 cursor-pointer"
+                className="flex items-center gap-3 px-3 py-3 cursor-pointer"
                 onClick={() => setChat(null)}
             >
-                <GiCutLemon fill="oklch(85.2% 0.199 91.936)" size={40} className="transition-all duration-300 text-amber-300 hover:animate-squeeze"/>
-                <span className="text-3xl pt-2 handlee-regular text-black">Lemon</span>
+                <GiCutLemon fill="oklch(85.2% 0.199 91.936)" className="w-8 h-8 transition-all duration-300 text-amber-300 hover:animate-squeeze"/>
+                <span className="text-xl handlee-regular text-black mt-1.5">Lemon</span>
             </div>
             <div className="mt-3 flex flex-col">
                 <div className="flex items-center justify-start gap-2 pl-3 hover:bg-stone-200 cursor-pointer"

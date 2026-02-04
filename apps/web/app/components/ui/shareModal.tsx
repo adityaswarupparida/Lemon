@@ -116,7 +116,7 @@ export const ShareModal = ({ isOpen, onClose, chatId, chatTitle }: ShareModalPro
                         {/* Header */}
                         <div className="flex items-center justify-between px-4 py-3 border-b border-stone-200">
                             <h2 className="text-lg font-medium text-black handlee-regular">Share this chat</h2>
-                            <button onClick={onClose} className="text-stone-400 hover:text-stone-600">
+                            <button onClick={onClose} className="text-stone-400 hover:text-stone-600 cursor-pointer">
                                 <IoCloseOutline size={24} />
                             </button>
                         </div>
@@ -142,7 +142,7 @@ export const ShareModal = ({ isOpen, onClose, chatId, chatTitle }: ShareModalPro
                                             data-testid="share-toggle"
                                             onClick={handleToggle}
                                             disabled={toggling}
-                                            className={`relative w-12 h-6 rounded-full transition-colors ${
+                                            className={`relative w-12 h-6 rounded-full transition-colors cursor-pointer ${
                                                 isShareable ? "bg-amber-400" : "bg-stone-300"
                                             } ${toggling ? "opacity-50" : ""}`}
                                         >
@@ -170,7 +170,7 @@ export const ShareModal = ({ isOpen, onClose, chatId, chatTitle }: ShareModalPro
                                                 />
                                                 <button
                                                     onClick={handleCopy}
-                                                    className="flex items-center gap-1 px-3 py-1.5 bg-amber-400 hover:bg-amber-500 text-black rounded-lg transition-colors handlee-regular"
+                                                    className="flex items-center gap-1 px-3 py-1.5 bg-amber-400 hover:bg-amber-500 text-black rounded-lg transition-colors handlee-regular cursor-pointer"
                                                 >
                                                     <IoCopyOutline size={16} />
                                                     Copy

@@ -118,7 +118,7 @@ export default function SharedChatPage() {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 px-4 md:px-40 py-6 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-amber-200">
+            <div className="flex-1 px-4 md:px-40 xl:px-64 py-6 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-amber-200">
                 {messages.map((msg) => (
                     <div key={msg.id} className="mb-6">
                         {msg.role.toLowerCase() === "user" ? (

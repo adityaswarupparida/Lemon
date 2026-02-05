@@ -81,7 +81,7 @@ export default function SharedChatPage() {
                 <p className="text-xl text-black handlee-regular">{error ?? `Invalid chat link`}</p>
                 <Link
                     href="/signup"
-                    className="mt-4 px-6 py-2 bg-amber-400 hover:bg-amber-500 text-black rounded-lg handlee-regular transition-colors"
+                    className="mt-4 px-6 py-2 bg-amber-300 hover:bg-amber-400 text-black rounded-lg handlee-regular transition-colors"
                 >
                     Try Lemon
                 </Link>
@@ -90,11 +90,11 @@ export default function SharedChatPage() {
     }
 
     return (
-        <div className="min-h-screen bg-white flex flex-col">
+        <div className="h-screen bg-white flex flex-col overflow-hidden">
             {/* Header */}
-            <header className="sticky top-0 bg-white border-b border-stone-200 px-4 py-3 flex items-center justify-between z-10">
-                <div className="flex items-center gap-2">
-                    <GiCutLemon className="w-8 h-8 text-amber-300" />
+            <header className="sticky top-0 bg-white border-b border-stone-200 px-3 py-3 flex items-center justify-between z-10">
+                <div className="flex items-center gap-3">
+                    <GiCutLemon className="w-8 h-8 text-amber-300 mb-1" />
                     <span className="text-xl handlee-regular text-black">Lemon</span>
                     <span className="ml-4 px-2 py-0.5 bg-stone-100 text-stone-500 text-sm rounded handlee-regular">
                         Shared Chat
@@ -102,7 +102,7 @@ export default function SharedChatPage() {
                 </div>
                 <Link
                     href="/signup"
-                    className="px-4 py-2 bg-amber-400 hover:bg-amber-500 text-black rounded-lg handlee-regular transition-colors"
+                    className="px-5 py-2 bg-amber-300 hover:bg-amber-400 text-black rounded-lg handlee-regular transition-colors"
                 >
                     Try Lemon
                 </Link>
@@ -117,7 +117,7 @@ export default function SharedChatPage() {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 px-4 md:px-40 py-6 overflow-y-auto">
+            <div className="flex-1 px-4 md:px-40 py-6 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-amber-200">
                 {messages.map((msg) => (
                     <div key={msg.id} className="mb-6">
                         {msg.role.toLowerCase() === "user" ? (
@@ -143,7 +143,7 @@ export default function SharedChatPage() {
                 <p className="text-black handlee-regular mb-2">Want to start your own conversation?</p>
                 <Link
                     href="/signup"
-                    className="inline-block px-6 py-2 bg-amber-400 hover:bg-amber-500 text-black rounded-lg handlee-regular transition-colors"
+                    className="inline-block px-6 py-2 bg-amber-300 hover:bg-amber-400 text-black rounded-lg handlee-regular transition-colors"
                 >
                     Sign up free
                 </Link>

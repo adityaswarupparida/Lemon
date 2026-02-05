@@ -5,6 +5,7 @@ import { GiCutLemon } from "react-icons/gi";
 import ReactMarkdown from "react-markdown";
 import Link from "next/link";
 import { BACKEND_URL } from "../../services/config";
+import { MarkdownComponents } from "../../components/messageBubble";
 
 type Message = {
     id: string;
@@ -129,8 +130,10 @@ export default function SharedChatPage() {
                         ) : (
                             <div className="flex items-start gap-3">
                                 <GiCutLemon className="w-8 h-8 text-amber-300 shrink-0 mt-1" />
-                                <div className="prose max-w-none text-black handlee-regular">
-                                    <ReactMarkdown>{msg.content}</ReactMarkdown>
+                                <div className="prose text-black handlee-regular">
+                                    <ReactMarkdown components={MarkdownComponents}>
+                                        {msg.content}
+                                    </ReactMarkdown>
                                 </div>
                             </div>
                         )}

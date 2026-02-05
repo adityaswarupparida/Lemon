@@ -9,7 +9,7 @@ export type Message = {
 }
 
 // Memoized markdown components to prevent re-renders
-const markdownComponents: Components = {
+export const MarkdownComponents: Components = {
     code({ className, children, ...props }) {
         const match = /language-(\w+)/.exec(className || "");
         const isInline = !match && !className;
@@ -44,7 +44,7 @@ export const MessageBubble = memo(({ message, loading } : { message: Message, lo
             {message.role == `assistant` && (
                 <div className={`flex justify-start`}>
                     <div className="prose">
-                        <ReactMarkdown components={markdownComponents}>
+                        <ReactMarkdown components={MarkdownComponents}>
                             {parseMessage(message.content)}
                         </ReactMarkdown>
                     </div>

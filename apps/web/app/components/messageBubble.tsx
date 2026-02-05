@@ -1,11 +1,35 @@
 import { memo } from "react";
-import ReactMarkdown from "react-markdown";
+import ReactMarkdown, { Components } from "react-markdown";
+import { CodeBlock } from "./ui/codeBlock";
 
 export type Message = {
     id: number;
     content: string;
     role: "user" | "assistant";
 }
+
+// Memoized markdown components to prevent re-renders
+const markdownComponents: Components = {
+    code({ className, children, ...props }) {
+        const match = /language-(\w+)/.exec(className || "");
+        const isInline = !match && !className;
+
+        if (isInline) {
+            return (
+                <code className="bg-stone-100 px-1.5 py-0.5 rounded text-sm font-mono" {...props}>
+                    {children}
+                </code>
+            );
+        }
+
+        return (
+            <CodeBlock
+                language={match?.[1] ?? "text"}
+                code={String(children).replace(/\n$/, "")}
+            />
+        );
+    },
+};
 
 export const MessageBubble = memo(({ message, loading } : { message: Message, loading: boolean }) => {
     return (
@@ -20,7 +44,9 @@ export const MessageBubble = memo(({ message, loading } : { message: Message, lo
             {message.role == `assistant` && (
                 <div className={`flex justify-start`}>
                     <div className="prose">
-                        <ReactMarkdown>{parseMessage(message.content)}</ReactMarkdown>
+                        <ReactMarkdown components={markdownComponents}>
+                            {parseMessage(message.content)}
+                        </ReactMarkdown>
                     </div>
                 </div>
             )}

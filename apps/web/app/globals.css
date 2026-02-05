@@ -150,3 +150,8 @@ a {
   font-weight: 900;
   font-style: normal;
 }
+
+/* Override syntax highlighter pre background */
+pre {
+  background: transparent !important;
+}

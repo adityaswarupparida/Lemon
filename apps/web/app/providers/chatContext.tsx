@@ -1,5 +1,5 @@
 "use client"
-import { createContext, ReactNode, useCallback, useState } from "react";
+import { createContext, ReactNode, useCallback, useMemo, useState } from "react";
 import { ChatItem } from "../types";
 
 type StreamingTitle = {
@@ -33,11 +33,13 @@ export const ChatContextProvider = ({ children }: { children: ReactNode }) => {
         setChat((prev) => (prev?.id === chatId ? { ...prev, title: newTitle } : prev));
     }, []);
 
+    const contextValue = useMemo(() => ({
+        chat, setChat, chats, setChats,
+        updateChatTitleInList, streamingTitle, setStreamingTitle
+    }), [chat, chats, updateChatTitleInList, streamingTitle]);
+
     return (
-        <ChatContext.Provider value={{
-            chat, setChat, chats, setChats,
-            updateChatTitleInList, streamingTitle, setStreamingTitle
-        }}>
+        <ChatContext.Provider value={contextValue}>
             {children}
         </ChatContext.Provider>
     );

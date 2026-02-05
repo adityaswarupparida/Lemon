@@ -99,21 +99,35 @@ export const Sidebar = memo(() => {
 
     useEffect(() => {
         if (!token) return;
+        const abortController = new AbortController();
 
         (async () => {
             try {
-                const fetchedChats = await getChats(token);
+                const fetchedChats = await getChats(token, abortController.signal);
                 setChats(fetchedChats);
+            } catch (err: any) {
+                if (err.name !== 'AbortError') {
+                    console.error('Failed to fetch chats:', err);
+                }
             } finally {
-                setChatsLoading(false);
+                if (!abortController.signal.aborted) setChatsLoading(false);
             }
         })();
 
         (async () => {
-            const response = await getDetails(token);
-            setUser(response.user);
+            try {
+                const response = await getDetails(token, abortController.signal);
+                if (!abortController.signal.aborted) setUser(response.user);
+            } catch (err: any) {
+                if (err.name !== 'AbortError' && err.code !== 'ERR_CANCELED') {
+                    console.error('Failed to fetch user details:', err);
+                }
+            }
         })();
 
+        return () => {
+            abortController.abort();
+        };
     }, [token, setChats])
 
     const handleNewChat = async () => {

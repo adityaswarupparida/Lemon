@@ -1,19 +1,16 @@
 "use client"
 import { useContext, useEffect, useRef, useState, useCallback } from "react";
-import ReactMarkdown from "react-markdown";
-import { Message, MessageBubble } from "./messageBubble";
-import { GiCutLemon } from "react-icons/gi";
-import { LemonAnimation } from "./ui/lemonAnimation";
+import { Message } from "./messageBubble";
 import { useStreamingText } from "../hooks/useStreamingText";
 import { getMessages } from "../services/message";
 import { updateChatTitle } from "../services/chat";
-import { IoCopyOutline, IoRefresh } from "react-icons/io5";
 import { BACKEND_URL, getAuthTokenKey } from "../services/config";
 import { ChatItem } from "../types";
 import { ChatContext } from "../providers/chatContext";
 import { ShareModal } from "./ui/shareModal";
 import { ChatHeader } from "./ui/chatHeader";
 import { ChatInput } from "./ui/chatInput";
+import { ChatMessages } from "./ui/chatMessages";
 
 export const ChatInterface = ({ chat }: { chat: ChatItem | null }) => {
     const context = useContext(ChatContext);
@@ -221,28 +218,39 @@ export const ChatInterface = ({ chat }: { chat: ChatItem | null }) => {
 
         // Clear error when switching chats
         setError(null);
+        const abortController = new AbortController();
 
         (async () => {
-            let msgs = await getMessages(chat.id, token);
+            try {
+                let msgs = await getMessages(chat.id, token, abortController.signal);
 
-            msgs = msgs.map((msg: any) => ({
-                id: msg.id,
-                content: msg.content,
-                role: msg.role.toLowerCase()
-            }))
-            setMessages(msgs);
+                msgs = msgs.map((msg: any) => ({
+                    id: msg.id,
+                    content: msg.content,
+                    role: msg.role.toLowerCase()
+                }))
+                setMessages(msgs);
 
-            // Scroll to bottom after messages load
-            requestAnimationFrame(() => {
+                // Scroll to bottom after messages load
                 requestAnimationFrame(() => {
-                    const container = containerRef.current;
-                    if (container) {
-                        container.scrollTop = container.scrollHeight;
-                    }
+                    requestAnimationFrame(() => {
+                        if (abortController.signal.aborted) return;
+                        const container = containerRef.current;
+                        if (container) {
+                            container.scrollTop = container.scrollHeight;
+                        }
+                    });
                 });
-            });
+            } catch (err: any) {
+                if (err.name !== 'AbortError') {
+                    console.error('Failed to fetch messages:', err);
+                }
+            }
         })()
 
+        return () => {
+            abortController.abort();
+        };
     }, [chat, token]);
 
     // When typing catches up to the full message, add to messages
@@ -336,103 +344,26 @@ export const ChatInterface = ({ chat }: { chat: ChatItem | null }) => {
                 </button>
             </div>
             <div className="bg-white flex flex-col flex-1 overflow-hidden">
-                <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white
-                    [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-amber-200 px-40 text-black [overflow-anchor:none]" ref={containerRef}>
-                    {messages.map((msg, index) => {
-                        const isLastUserMsg = msg.role === 'user' && index === messages.length - 1;
-                        return (
-                            <div key={`${index}`} ref={isLastUserMsg ? lastUserMsgRef : null}>
-                                <MessageBubble key={msg.id} message={msg} loading={false} />
-                            </div>
-                        );
-                    })}
-
-                    {/* Response area - always rendered to prevent jump */}
-                    <div
-                        className={`flex flex-col ${(loading || isStreaming) ? 'min-h-[70vh]' : ''}`}
-                        style={!loading && !isStreaming && remainingSpace > 0 ? { minHeight: remainingSpace } : undefined}
-                    >
-                        {/* Loading state */}
-                        {loading && (
-                            <div className="flex flex-col items-start mt-2">
-                                <GiCutLemon
-                                    className={`w-8 h-8 transition-all duration-300 text-amber-300 animate-squeeze`}
-                                />
-                            </div>
-                        )}
-
-                        {/* Streaming response */}
-                        {displayedText !== "" && (
-                            <div ref={responseContentRef} className="flex flex-col items-start mt-2">
-                                <div className="prose">
-                                    <ReactMarkdown>{displayedText}</ReactMarkdown>
-                                </div>
-                                <div className="flex items-center mt-2 mb-8">
-                                    <LemonAnimation size="md"/>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Idle state - copy/regenerate buttons */}
-                        {displayedText === "" && !loading && !error && !isStreaming && getLastAssistantMessage() && (
-                            <div className="flex flex-col items-start mt-2">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <button
-                                        onClick={handleCopy}
-                                        className="flex items-center gap-1 text-stone-400 hover:text-amber-500 transition-colors cursor-pointer"
-                                        title="Copy response"
-                                    >
-                                        <IoCopyOutline size={18} />
-                                        <span className="text-sm">{copied ? "Copied!" : "Copy"}</span>
-                                    </button>
-                                    <button
-                                        onClick={handleRegenerate}
-                                        disabled={isStreaming}
-                                        className="flex items-center gap-1 text-stone-400 hover:text-amber-500 transition-colors disabled:opacity-50 cursor-pointer"
-                                        title="Regenerate response"
-                                    >
-                                        <IoRefresh size={18} />
-                                        <span className="text-sm">Regenerate</span>
-                                    </button>
-                                </div>
-                                <div className="flex items-center mt-2 mb-8">
-                                    <GiCutLemon
-                                        className={`w-8 h-8 transition-all duration-300 text-amber-400/80`}
-                                    />
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Spacer always present - fills remaining space */}
-                        <div className="grow" />
-                    </div>
-
-                    {error && (
-                        <div className="flex flex-col items-start mt-4 p-4 bg-red-50/60 border border-red-400/60 rounded-lg max-w-xl">
-                            <div className="flex justify-start items-center gap-2 text-red-600">
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                </svg>
-                                <p>{error.message}</p>
-                            </div>
-                            <button
-                                onClick={handleRetry}
-                                className="mt-2 flex items-center gap-2 bg-red-100 hover:bg-red-200 text-red-700 px-4 py-2 rounded-lg transition-colors cursor-pointer text-sm"
-                            >
-                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                </svg>
-                                Retry
-                            </button>
-                        </div>
-                    )}
-
-                    {/* Scroll anchor */}
-                    <div ref={scrollAnchorRef} className="h-px" />
-                </div>
+                <ChatMessages
+                    messages={messages}
+                    loading={loading}
+                    isStreaming={isStreaming}
+                    displayedText={displayedText}
+                    remainingSpace={remainingSpace}
+                    error={error}
+                    copied={copied}
+                    hasLastAssistantMessage={!!getLastAssistantMessage()}
+                    containerRef={containerRef}
+                    lastUserMsgRef={lastUserMsgRef}
+                    responseContentRef={responseContentRef}
+                    scrollAnchorRef={scrollAnchorRef}
+                    onCopy={handleCopy}
+                    onRegenerate={handleRegenerate}
+                    onRetry={handleRetry}
+                />
                 <div className="px-40 my-3 rounded-3xl">
                     <ChatInput onSubmit={sendMessage} isStreaming={isStreaming} />
-                </div>    
+                </div>
             </div>
 
             <ShareModal

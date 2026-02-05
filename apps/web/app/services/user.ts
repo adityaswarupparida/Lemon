@@ -51,10 +51,11 @@ export const signIn = async (input: SignInInput) => {
     }
 }
 
-export const getDetails = async (token: string) => {
+export const getDetails = async (token: string, signal?: AbortSignal) => {
     try {
         const response = await axios.get(`${BACKEND_URL}/api/user/details`, {
-            headers: { Authorization: `Bearer ${token}` }
+            headers: { Authorization: `Bearer ${token}` },
+            signal,
         });
 
         return {

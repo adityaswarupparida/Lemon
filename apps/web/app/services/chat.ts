@@ -1,12 +1,13 @@
 import { SearchResult } from "../types";
 import { BACKEND_URL } from "./config";
 
-export const getChats = async (token: string) => {
+export const getChats = async (token: string, signal?: AbortSignal) => {
     const response = await fetch(`${BACKEND_URL}/api/chat`, {
         method: "GET",
         headers: {
             "Authorization": `Bearer ${token}`
-        }
+        },
+        signal,
     });
 
     const results = await response.json();

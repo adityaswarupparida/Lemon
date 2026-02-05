@@ -12,14 +12,14 @@ import { BACKEND_URL, getAuthTokenKey } from "../services/config";
 import { ChatItem } from "../types";
 import { ChatContext } from "../providers/chatContext";
 import { ShareModal } from "./ui/shareModal";
-import { CodeBlock } from "./ui/codeBlock";
+import { ChatHeader } from "./ui/chatHeader";
+import { ChatInput } from "./ui/chatInput";
 
 export const ChatInterface = ({ chat }: { chat: ChatItem | null }) => {
     const context = useContext(ChatContext);
     const { updateChatTitleInList, setStreamingTitle } = context!;
 
     const [messages, setMessages] = useState<Message[]>([]);
-    const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
     const [isStreaming, setIsStreaming] = useState(false);
     const [streamingComplete, setStreamingComplete] = useState(true);
@@ -131,7 +131,6 @@ export const ChatInterface = ({ chat }: { chat: ChatItem | null }) => {
             });
         }
 
-        setInput("");
         setLoading(true);
         setIsStreaming(true);
 
@@ -208,12 +207,6 @@ export const ChatInterface = ({ chat }: { chat: ChatItem | null }) => {
             reset();
             setIsStreaming(false);
         }
-    };
-
-    const handleClick = async () => {
-        const request = input.trim();
-        if (!request) return;
-        await sendMessage(request);
     };
 
     const handleRetry = async () => {
@@ -332,10 +325,8 @@ export const ChatInterface = ({ chat }: { chat: ChatItem | null }) => {
 
     return (
         <div className="flex flex-col flex-1 h-full handlee-regular selection:bg-yellow-100">
-            <div className="px-4 py-3 flex justify-between items-center bg-white border-b border-stone-200">
-                <h1 className="text-xl handlee-regular text-black truncate max-w-lg">
-                    {chat?.title || "New Chat"}
-                </h1>
+            <div className="px-4 py-3 flex justify-between items-center bg-white border-b border-stone-50">
+                <ChatHeader chat={chat} token={token} />
                 <button
                     className="px-5 py-1.5 bg-amber-300 hover:bg-amber-400 text-black rounded-lg cursor-pointer handlee-regular transition-colors"
                     onClick={() => chat && setShowShareModal(true)}
@@ -365,7 +356,7 @@ export const ChatInterface = ({ chat }: { chat: ChatItem | null }) => {
                         {loading && (
                             <div className="flex flex-col items-start mt-2">
                                 <GiCutLemon
-                                    className={`w-10 h-10 transition-all duration-300 text-amber-300 animate-squeeze`}
+                                    className={`w-8 h-8 transition-all duration-300 text-amber-300 animate-squeeze`}
                                 />
                             </div>
                         )}
@@ -373,37 +364,17 @@ export const ChatInterface = ({ chat }: { chat: ChatItem | null }) => {
                         {/* Streaming response */}
                         {displayedText !== "" && (
                             <div ref={responseContentRef} className="flex flex-col items-start mt-2">
-                                <div className="prose prose-stone">
-                                    <ReactMarkdown
-                                        components={{
-                                            code({ className, children, ...props }) {
-                                                const match = /language-(\w+)/.exec(className || '');
-                                                const codeString = String(children).replace(/\n$/, '');
-                                                if (match && match[1]) {
-                                                    return <CodeBlock language={match[1]} code={codeString} />;
-                                                }
-                                                return (
-                                                    <code className="bg-stone-100 text-stone-800 px-1.5 py-0.5 rounded text-sm font-mono" {...props}>
-                                                        {children}
-                                                    </code>
-                                                );
-                                            },
-                                            pre({ children }) {
-                                                return <>{children}</>;
-                                            }
-                                        }}
-                                    >
-                                        {displayedText}
-                                    </ReactMarkdown>
+                                <div className="prose">
+                                    <ReactMarkdown>{displayedText}</ReactMarkdown>
                                 </div>
                                 <div className="flex items-center mt-2 mb-8">
-                                    <LemonAnimation size="lg"/>
+                                    <LemonAnimation size="md"/>
                                 </div>
                             </div>
                         )}
 
                         {/* Idle state - copy/regenerate buttons */}
-                        {displayedText === "" && !loading && !error && streamingComplete && getLastAssistantMessage() && (
+                        {displayedText === "" && !loading && !error && !isStreaming && getLastAssistantMessage() && (
                             <div className="flex flex-col items-start mt-2">
                                 <div className="flex items-center gap-2 mb-2">
                                     <button
@@ -426,7 +397,7 @@ export const ChatInterface = ({ chat }: { chat: ChatItem | null }) => {
                                 </div>
                                 <div className="flex items-center mt-2 mb-8">
                                     <GiCutLemon
-                                        className={`w-10 h-10 transition-all duration-300 text-amber-300`}
+                                        className={`w-8 h-8 transition-all duration-300 text-amber-400/80`}
                                     />
                                 </div>
                             </div>
@@ -460,25 +431,8 @@ export const ChatInterface = ({ chat }: { chat: ChatItem | null }) => {
                     <div ref={scrollAnchorRef} className="h-px" />
                 </div>
                 <div className="px-40 my-3 rounded-3xl">
-                    <div className="h-14 flex items-center px-1 gap-2 bg-stone-100 rounded-3xl">
-                        <input
-                            type="text"
-                            placeholder="Ask anything"
-                            className="bg-white h-4/5 py-1 px-3 flex-1 text-black text-lg rounded-3xl focus:outline-amber-300 focus:outline-solid disabled:opacity-50"
-                            value={input}
-                            onChange={(e) => setInput(e.target.value)}
-                            onKeyDown={(e) => e.key === "Enter" && !isStreaming && handleClick()}
-                            disabled={isStreaming}
-                        />
-                        <button
-                            className="bg-yellow-400 text-black w-20 h-4/5 py-2 px-4 rounded-3xl cursor-pointer hover:bg-amber-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                            onClick={handleClick}
-                            disabled={isStreaming || !input.trim()}
-                        >
-                            {isStreaming ? "Stop" : "Send"}
-                        </button>
-                    </div>
-                </div>
+                    <ChatInput onSubmit={sendMessage} isStreaming={isStreaming} />
+                </div>    
             </div>
 
             <ShareModal

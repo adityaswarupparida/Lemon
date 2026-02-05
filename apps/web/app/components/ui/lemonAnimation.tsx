@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { GiCutLemon } from "react-icons/gi";
 
 type LemonSize = "sm" | "md" | "lg" | "xl";
@@ -41,7 +42,7 @@ const sizeConfig = {
     },
 };
 
-export const LemonAnimation = ({ size = "xl" }: { size?: LemonSize }) => {
+export const LemonAnimation = memo(({ size = "xl" }: { size?: LemonSize }) => {
     const config = sizeConfig[size];
     const dropAnimationClasses = ["animate-drop-1", "animate-drop-2", "animate-drop-3"] as const;
 
@@ -49,7 +50,7 @@ export const LemonAnimation = ({ size = "xl" }: { size?: LemonSize }) => {
         <div className="flex items-center justify-center">
             <div className="relative">
                 <GiCutLemon
-                    className={`${config.icon} transition-all duration-300 text-amber-300 animate-squeeze`}
+                    className={`${config.icon} transition-all duration-300 text-amber-400/80 animate-squeeze`}
                 />
                 <>
                     {config.drops.map((drop, index) => (
@@ -64,4 +65,4 @@ export const LemonAnimation = ({ size = "xl" }: { size?: LemonSize }) => {
             </div>
         </div>
     );
-};
+});

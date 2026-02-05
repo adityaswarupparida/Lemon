@@ -4,7 +4,7 @@ import { LemonAnimation } from "./ui/lemonAnimation";
 export const Home = () => {
     
     return (
-        <div className="flex flex-col justify-between items-center bg-yellow-50 w-full text-black handlee-regular border-l-2 border-l-amber-100">
+        <div className="flex flex-col justify-between items-center bg-yellow-50 w-full text-black handlee-regular">
             <div className="flex flex-col justify-center items-center w-full grow">
                 <div className="flex flex-col justify-center items-center text-9xl w-full">
                     <div>

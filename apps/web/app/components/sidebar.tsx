@@ -1,10 +1,9 @@
 "use client"
 import { GiCutLemon } from "react-icons/gi";
-import { AiOutlineWechat } from "react-icons/ai";
 import { GoSearch } from "react-icons/go";
 import { IoIosArrowDown } from "react-icons/io";
-import { IoSettingsOutline, IoLogOutOutline } from "react-icons/io5";
-import { useContext, useEffect, useRef, useState } from "react";
+import { IoLogOutOutline } from "react-icons/io5";
+import { useContext, useEffect, useRef, useState, memo } from "react";
 import { createNewChat, getChats } from "../services/chat";
 import { useRouter } from "next/navigation";
 import { getDetails } from "../services/user";
@@ -14,8 +13,9 @@ import { ChatContext } from "../providers/chatContext";
 import { getAuthTokenKey } from "../services/config";
 import { motion, AnimatePresence } from "framer-motion";
 import { SearchModal } from "./ui/searchModal";
+import { HiOutlinePencilSquare } from "react-icons/hi2";
 
-export const Sidebar = () => {
+export const Sidebar = memo(() => {
     const router = useRouter();
     const context = useContext(ChatContext);
     const { setChat, chats, setChats, streamingTitle, setStreamingTitle } = context!;
@@ -130,39 +130,39 @@ export const Sidebar = () => {
     }
 
     return (
-        <div className="min-w-60 w-60 bg-stone-50 hidden sm:block h-full overflow-hidden relative">
+        <div className="min-w-60 w-60 bg-white border-r border-stone-200 hidden sm:block h-full overflow-hidden relative">
             <div
                 className="flex items-center gap-3 px-3 py-3 cursor-pointer"
                 onClick={() => setChat(null)}
             >
-                <GiCutLemon fill="oklch(85.2% 0.199 91.936)" className="w-8 h-8 transition-all duration-300 text-amber-300 hover:animate-squeeze"/>
+                <GiCutLemon className="w-8 h-8 transition-all duration-300 text-amber-400/80 hover:animate-squeeze"/>
                 <span className="text-xl handlee-regular text-black mt-1.5">Lemon</span>
             </div>
             <div className="mt-3 flex flex-col">
-                <div className="flex items-center justify-start gap-2 pl-3 hover:bg-stone-200 cursor-pointer"
+                <div className="flex items-center justify-start gap-2 px-4 hover:bg-stone-100 cursor-pointer"
                     onClick={handleNewChat}
                 >
-                    <AiOutlineWechat fill="oklch(85.2% 0.199 91.936)" size={30} />
-                    <span className="text-lg pt-2 pl-2 handlee-regular text-black">New chat</span>
+                    <HiOutlinePencilSquare className="w-6 h-6 text-amber-300" />
+                    <span className="text-md pt-2 pl-2 handlee-regular text-black">New chat</span>
                 </div>
                 <div
-                    className="flex items-center justify-start gap-2 pl-3 hover:bg-stone-200 cursor-pointer"
+                    className="flex items-center justify-start gap-2 px-4 hover:bg-stone-100 cursor-pointer"
                     onClick={() => setShowSearch(true)}
                 >
-                    <GoSearch fill="oklch(85.2% 0.199 91.936)" size={30} />
-                    <span className="text-lg pt-2 pl-2 handlee-regular text-black">Search chats</span>
+                    <GoSearch className="w-6 h-6 text-amber-300" />
+                    <span className="text-md pt-2 pl-2 handlee-regular text-black">Search chats</span>
                 </div>
             </div>
-            <div className="mt-4 overflow-y-auto w-full">
-                <button className="flex items-center justify-start gap-2 pl-5 hover:cursor-pointer"
+            <div className="mt-5 overflow-y-auto w-full">
+                <button className="flex items-center justify-start gap-2 pl-5 pb-2 hover:cursor-pointer"
                     onClick={() => setToggleChats(cur => !cur)}
                 >
-                    <span className="text-lg handlee-regular text-black">Your chats</span>
+                    <span className="text-sm handlee-regular text-black/60">Your chats</span>
                     <motion.div
                         animate={{ rotate: toggleChats ? 0 : -90 }}
                         transition={{ duration: 0.2 }}
                     >
-                        <IoIosArrowDown fill="black" size={15} />
+                        <IoIosArrowDown fill="gray" size={15} />
                     </motion.div>
                 </button>
                 <AnimatePresence>
@@ -196,7 +196,7 @@ export const Sidebar = () => {
                                     <div
                                         key={c.id}
                                         onClick={() => setChat({ id: c.id, title: c.title })}
-                                        className="text-black handlee-regular pl-5 pt-2 line-clamp-1 hover:bg-stone-200 cursor-pointer"
+                                        className="text-black text-md handlee-regular pl-5 pt-2 line-clamp-1 hover:bg-stone-100 cursor-pointer"
                                     >
                                         {title}
                                     </div>
@@ -256,4 +256,4 @@ export const Sidebar = () => {
             />
         </div>
     );
-}
+});

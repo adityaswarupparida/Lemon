@@ -143,7 +143,7 @@ export const ShareModal = ({ isOpen, onClose, chatId, chatTitle }: ShareModalPro
                                             onClick={handleToggle}
                                             disabled={toggling}
                                             className={`relative w-12 h-6 rounded-full transition-colors cursor-pointer ${
-                                                isShareable ? "bg-amber-400" : "bg-stone-300"
+                                                isShareable ? "bg-amber-300" : "bg-stone-300"
                                             } ${toggling ? "opacity-50" : ""}`}
                                         >
                                             <motion.div
@@ -170,7 +170,7 @@ export const ShareModal = ({ isOpen, onClose, chatId, chatTitle }: ShareModalPro
                                                 />
                                                 <button
                                                     onClick={handleCopy}
-                                                    className="flex items-center gap-1 px-3 py-1.5 bg-amber-400 hover:bg-amber-500 text-black rounded-lg transition-colors handlee-regular cursor-pointer"
+                                                    className="flex items-center gap-1 px-3 py-1.5 bg-amber-300 hover:bg-amber-400 text-black rounded-lg transition-colors handlee-regular cursor-pointer"
                                                 >
                                                     <IoCopyOutline size={16} />
                                                     Copy

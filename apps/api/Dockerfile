@@ -1,5 +1,6 @@
 FROM oven/bun:1
 ARG DATABASE_URL
+ENV DATABASE_URL=$DATABASE_URL
 
 WORKDIR /app
 
@@ -8,7 +9,8 @@ COPY apps/api ./apps/api
 COPY packages/db ./packages/db
 
 RUN bun install
-RUN DATABASE_URL=$DATABASE_URL bunx prisma generate --schema=packages/db/prisma/schema.prisma
+RUN bunx prisma migrate deploy --config=packages/db/prisma.config.ts
+RUN bunx prisma generate --config=packages/db/prisma.config.ts
 
 WORKDIR /app/apps/api
 
